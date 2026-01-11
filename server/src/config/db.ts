@@ -138,7 +138,7 @@ export { Shipper, saveShipper };
 
 //section for DeliRoute schema and model
 const RouteSchema = new mongoose.Schema({
-    routeId: { type: String, required: true, unique: true },
+    RouteId: { type: String, required: true, unique: true },
     Hub: { type: String, required: true },
     AssignPersonName: { type: String, required: true },
     DateCreated: { type: Date, default: Date.now },

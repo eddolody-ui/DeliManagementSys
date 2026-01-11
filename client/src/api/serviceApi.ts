@@ -141,17 +141,17 @@ export interface RouteData {
   DateCreated?: Date;
 }
 export const createRoute = async (RouteData: RouteData) => {
-  const res = await api.post("/Routes", RouteData);
+  const res = await api.post("/routes", RouteData);
   return res.data;
 }
 
 export const getRoutes = async (): Promise<RouteData[]> => {
-  const res = await api.get("/Routes");
+  const res = await api.get("/routes");
   return res.data;
 };
 
 export const getRoute = async (id: string): Promise<RouteData & { _id: string }> => {
-  const res = await api.get(`/Routes/${id}`);
+  const res = await api.get(`/routes/${id}/routes`);
   return res.data;
 };
 

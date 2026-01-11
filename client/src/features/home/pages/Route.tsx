@@ -23,12 +23,13 @@ export function RoutePage() {
   const navigate = useNavigate();
   const [, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
-  const [routeId, setRouteId] = useState("");
+  const [newRouteId, setnewRouteId] = useState("");
   const [, setRoutes] = useState<RouteData[] | undefined>(undefined);
+  const routeId = newRouteId || generateRouteId();
 
   const openStatusModal = () => {
     // generate a stable RouteId for this creation session and show modal
-    setRouteId(generateRouteId());
+    setnewRouteId(generateRouteId());
     setShowModal(true);
   };
 const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true);
     try {
     await createRoute({
-      RouteId: routeId || generateRouteId(),
+      RouteId: routeId,
       Hub: newHub,
       AssignPersonName: newRider,
       DateCreated: new Date(),
@@ -105,7 +106,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                                                   <h2 className="text-2xl font-bold mb-6 text-gray-900">Create Route</h2>
                                                   <div className="mb-3">
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">Route ID</label>
-                                                    <div className="w-full rounded-md border px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">{routeId || "(will be generated)"}</div>
+                                                    <div className="w-full rounded-md border px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">{newRouteId || "(will be generated)"}</div>
                                                   </div>
                                                   <div className="mb-6">
                                     <label htmlFor="status-Hub" className="block text-sm font-medium text-gray-700 mb-2">Select Hub</label>

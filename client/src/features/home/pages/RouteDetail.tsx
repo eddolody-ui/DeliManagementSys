@@ -8,9 +8,8 @@ import { getRoute, type OrderData, type RouteData } from "@/api/serviceApi"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 
 export function RouteDetail() {
-  const { routeId } = useParams<{ routeId: string }>()
+  const {RouteId } = useParams<{ RouteId: string }>()
   const [route, setRoute] = useState<(RouteData & { _id: string }) | null>(null)
-  const [order] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,13 +22,12 @@ export function RouteDetail() {
 
   // Update newStatus when modal opens
   const openStatusModal = () => {
-    setNewStatus(order?.Status || "");
     setShowModal(true);
   };
 
   useEffect(() => {
     const fetchRoute = async () => {
-      if (!routeId) {
+      if (!RouteId) {
         setError("No Route ID provided")
         setLoading(false)
         return
@@ -37,7 +35,7 @@ export function RouteDetail() {
 
       try {
         // Fetch route by RouteId (RouteId may be custom string or Mongo _id)
-        const routeData = await getRoute(routeId)
+        const routeData = await getRoute(RouteId)
         setRoute(routeData)
 
         // Handle shipper data - either populated object or string reference
@@ -58,7 +56,7 @@ export function RouteDetail() {
     }
 
     fetchRoute()
-  }, [routeId])
+  }, [RouteId])
 
   if (loading) {
     return (
@@ -129,95 +127,8 @@ export function RouteDetail() {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <SidebarInset className="flex flex-col w-full">
-
+        
           {/* Centered card matching mock: left info | center status + timeline | right actions */}
-          <div className={`p-6 rounded-lg`} >
-            <div className="max-w-5xl mx-auto overflow-hidden">
-              <div className="grid grid-cols-12">
-                {/* Left column: customer & seller info (3/12) */}
-                <div className="col-span-12 md:col-span-3 border-r px-6 py-8">
-                  <div className="mb-6">
-                    <div className="text-ms text-gray-400">Rider Name</div>
-                    <div className="mt-1 font-medium ">{route.AssignPersonName || '—'}</div>
-                  </div>
-                  <div className="mb-6">
-                    <div className="text-ms text-gray-400 ">Hub</div>
-                    <div className="mt-1 text-sm text-black-700">{route.Hub || '—'}</div>
-                  </div>
-                </div>
-
-                {/* Middle column: tracking & status (6/12) */}
-                <div className="col-span-12 md:col-span-6 px-8 py-8">
-                  <div className="flex items-center mb-6 justify-between w-170">
-                    <div className="flex">
-                      <div className="font-semibold text-gray-800">Tracking ID #{route.RouteId}</div>
-                    </div>
-                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" onClick={openStatusModal}>Update Status</Button>
-                            {/* Status Update Modal */}
-                            {showModal && (
-                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray bg-opacity-30 backdrop-blur-sm">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-8 relative animate-fade-in">
-                                  <button
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
-                                    onClick={() => setShowModal(false)}
-                                    aria-label="Close"
-                                    disabled={statusLoading  }                                  >
-                                    ×
-                                  </button>
-                                  <h2 className="text-2xl font-bold mb-6 text-gray-900">Update Order Status</h2>
-                                  <div className="mb-6">
-                                    <label htmlFor="status-select" className="block text-sm font-medium text-gray-700 mb-2">Select new status</label>
-                                    <Select
-                                        value={newStatus}
-                                        onValueChange={(value) => setNewStatus(value)}
-                                        disabled={statusLoading || order?.Status === "Cancelled"} // disable if cancelled
-                                      >
-                                        <SelectTrigger className="w-full min-h-[44px] text-gray-800 font-semibold shadow-sm">
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="Pending">Pending</SelectItem>
-                                          <SelectItem value="Hub Inbound">Hub Inbound</SelectItem>
-                                          <SelectItem value="Arrive At Softing Hub">Arrive At Softing Hub</SelectItem>
-                                          <SelectItem value="In Route">In Route</SelectItem>
-                                          <SelectItem value="Delivered">Delivered</SelectItem>
-                                          <SelectItem value="Return To Sender">Return To Sender</SelectItem>
-                                          <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                  </div>
-                                  {statusError && <div className="text-red-600 mb-4 text-sm">{statusError}</div>}
-                                  <textarea
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 hover:bg-blue-50"
-                                    rows={3}
-                                    placeholder="Changed Reason"
-                                    value={changeReason}
-                                    onChange={e => setChangeReason(e.target.value)}
-                                    disabled={statusLoading}
-                                  />
-                                  <div className="flex gap-3 justify-end">
-                                    <Button
-                                      disabled={statusLoading || !newStatus}                                    >
-                                      {statusLoading ? "Updating..." : "Update"}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowModal(false)}
-                                      disabled={statusLoading}
-                                      className="px-6 py-2 font-semibold rounded-lg border-gray-300"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                  </div>
-                  {/* Tracking History / Timeline */}    
-                  </div>
-              </div>
-            </div>
-          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
