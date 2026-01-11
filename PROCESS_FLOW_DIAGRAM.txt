@@ -1,0 +1,447 @@
+# Process Flow Diagram
+# Order Management System - Complete Process Flow
+
+================================================================================
+                              ORDER MANAGEMENT SYSTEM
+                              PROCESS FLOW DIAGRAM
+================================================================================
+
+LEGEND:
+├──►  Data Flow
+────►  Process Flow
+┌───┐  Component/File
+│   │
+└───┘
+┌───┐  Database
+│DB │
+└───┘
+┌───┐  User Action
+│USER│
+└───┘
+
+================================================================================
+                                START
+================================================================================
+
+┌─────────────┐
+│   USER      │
+│   ACTION    │
+└─────┬───────┘
+      │
+      ▼
+┌─────────────┐     ┌─────────────────────────────────────┐
+│ NAVIGATE TO │────►│         CREATE ORDER PAGE          │
+│ ORDER PAGE  │     │   (CreateOrder.tsx)               │
+└─────────────┘     └─────────────────────────────────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │  DISPLAY FORM   │
+                  │                 │
+                  │ • Tracking ID   │
+                  │ • Customer Name │
+                  │ • Contact       │
+                  │ • Address       │
+                  │ • Amount        │
+                  │ • Type  COD/    │
+                  │   Prepaid/Return│
+                  │ • Note          │
+                  └─────────────────┘
+                           │
+                           ▼
+┌─────────────┐     ┌─────────────────────────────────────┐
+│   USER      │────►│         FORM INTERACTION            │
+│   INPUT     │     │   (handleChange function)           │
+└─────────────┘     └─────────────────────────────────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │ UPDATE FORM     │
+                  │ STATE           │
+                  │                 │
+                  │ formData = {    │
+                  │   TrackingId,   │
+                  │   CustomerName, │
+                  │   ...           │
+                  │ }               │
+                  └─────────────────┘
+                           │
+                           ▼
+┌─────────────┐     ┌─────────────────────────────────────┐
+│   USER      │────►│         FORM SUBMISSION            │
+│   CLICKS    │     │   (handleSubmit function)         │
+│   SUBMIT    │     └─────────────────────────────────────┘
+└─────────────┘               │
+                              ▼
+                     ┌─────────────────┐
+                     │ PREVENT DEFAULT │
+                     │ FORM BEHAVIOR   │
+                     └─────────────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │ SET LOADING =   │
+                     │ TRUE            │
+                     └─────────────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │ CALL CREATE     │
+                     │ ORDER API       │
+                     │                 │
+                     │ createOrder(    │
+                     │   formData      │
+                     │ )               │
+                     └─────────────────┘
+                              │
+                              ▼
+            ┌─────────────────┼─────────────────┐
+            │                 │                 │
+            ▼                 ▼                 ▼
+    ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+    │   SUCCESS   │   │   LOADING  │   │   ERROR     │
+    │             │   │   STATE     │   │   HANDLING │
+    └─────┬───────┘   └─────────────┘   └─────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         API CALL FLOW               │
+│   (serviceApi.ts)                  │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ VALIDATE DATA   │
+ │ USING OrderData │
+ │ INTERFACE       │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ MAKE HTTP POST  │
+ │ REQUEST TO      │
+ │ /api/orders     │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         BACKEND PROCESSING          │
+│   (server/src/order.rout.ts)        │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RECEIVE REQUEST │
+ │ AT POST /       │
+ │ ROUTE           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ CALL SAVE ORDER │
+ │ FUNCTION        │
+ │ saveOrder(      │
+ │   req.body      │
+ │ )               │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         DATABASE OPERATIONS         │
+│   (server/src/config/db.ts)         │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ VALIDATE DATA   │
+ │ AGAINST SCHEMA  │
+ │                 │
+ │ OrderSchema:    │
+ │ • TrackingId    │
+ │ • CustomerName  │
+ │ • CustomerContact│
+ │ • CustomerAddress│
+ │ • Amount        │
+ │ • Type          │
+ │ • Note          │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ CREATE NEW      │
+ │ ORDER DOCUMENT  │
+ │ USING Order     │
+ │ MODEL           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ SAVE TO MONGODB │
+ │ COLLECTION      │
+ │ 'orders'        │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RETURN SAVED    │
+ │ DOCUMENT        │
+ │ WITH _id,       │
+ │ createdAt,      │
+ │ updatedAt       │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         RESPONSE FLOW               │
+│   (Back to Frontend)                │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ SEND HTTP 201   │
+ │ RESPONSE WITH   │
+ │ ORDER DATA      │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         FRONTEND RESPONSE           │
+│   (CreateOrder.tsx)                 │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RECEIVE API     │
+ │ RESPONSE        │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ SET LOADING =   │
+ │ FALSE           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ NAVIGATE TO     │
+ │ ORDER PAGE      │
+ │ (/Order)        │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         ORDER LIST DISPLAY          │
+│   (Order.tsx + DataTableDemo.tsx)  │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ COMPONENT       │
+ │ MOUNTS          │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ CALL GET ORDERS │
+ │ API             │
+ │ getOrders()     │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│  DATA FETCHING FLOW                 │
+│   (serviceApi.ts)                   │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ MAKE HTTP GET   │
+ │ REQUEST TO      │
+ │ /api/orders     │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         BACKEND DATA RETRIEVAL      │
+│   (server/src/order.rout.ts)        │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RECEIVE REQUEST │
+ │ AT GET /        │
+ │ ROUTE           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ QUERY MONGODB   │
+ │ Order.find({})  │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RETURN ALL      │
+ │ ORDERS ARRAY    │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│    DATA DISPLAY FLOW                │
+│   (DataTableDemo.tsx)               │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RECEIVE ORDERS  │
+ │ ARRAY           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ SET LOADING =   │
+ │ FALSE           │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ RENDER TABLE    │
+ │ WITH DATA       │
+ │                 │
+ │ COLUMNS:        │
+ │ • Tracking ID   │
+ │ • Customer Name │
+ │ • Contact       │
+ │ • Address       │
+ │ • Type          │
+ │ • Amount        │
+ │ • Date          │
+ └─────────────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │ DISPLAY IN      │
+ │ SORTABLE,       │
+ │ FILTERABLE      │
+ │ TABLE           │
+ └─────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────┐
+│         USER INTERACTIONS           │
+│   (Table Features)                  │
+└─────────────────────────────────────┘
+          │
+          ▼
+ ┌─────────────────┐     ┌─────────────────┐
+ │ SEARCH BY       │     │ SORT BY         │
+ │ TRACKING ID     │     │ ANY COLUMN      │
+ └─────────────────┘     └─────────────────┘
+          │                       │
+          └───────────┬───────────┘
+                      │
+                      ▼
+             ┌─────────────────┐
+             │ FILTERED/       │
+             │ SORTED DATA     │
+             │ DISPLAY         │
+             └─────────────────┘
+
+================================================================================
+                                END
+================================================================================
+
+================================================================================
+                            ERROR HANDLING FLOWS
+================================================================================
+
+FORM VALIDATION ERRORS:
+User Input ──► Form Validation ──► Error Display ──► User Correction
+
+API ERRORS:
+Frontend ──► API Call ──► Backend Error ──► Error Response ──► Error Toast/Message
+
+DATABASE ERRORS:
+API Call ──► Database Operation ──► DB Error ──► Error Log ──► Error Response
+
+================================================================================
+                            DATA FLOW SUMMARY
+================================================================================
+
+FORWARD FLOW (Create):
+User Form → handleChange → formData → handleSubmit → createOrder API
+→ POST /api/orders → saveOrder → MongoDB → Response → Success → Navigate
+
+REVERSE FLOW (Display):
+Order Page → DataTableDemo → useEffect → getOrders API → GET /api/orders
+→ Order.find({}) → Orders Array → Table Display → User View
+
+================================================================================
+                            COMPONENT RELATIONSHIPS
+================================================================================
+
+CreateOrder.tsx:
+├── handleSubmit() → createOrder() → API → Backend → DB
+├── handleChange() → formData (state) → handleSubmit()
+└── Success → navigate() → Order.tsx
+
+Order.tsx:
+└── DataTableDemo → getOrders() → API → Backend → DB → Display
+
+serviceApi.ts:
+├── createOrder() → POST /api/orders → saveOrder()
+└── getOrders() → GET /api/orders → Order.find({})
+
+order.rout.ts:
+├── POST / → saveOrder() → Order Model → MongoDB
+└── GET / → Order.find({}) → Orders Array
+
+db.ts:
+├── OrderSchema → Order Model → Database Operations
+├── saveOrder() → new Order() → order.save()
+└── Order Model → MongoDB Collection 'orders'
+
+================================================================================
+                            FILE STRUCTURE OVERVIEW
+================================================================================
+
+client/
+├── src/
+│   ├── features/home/pages/
+│   │   ├── CreateOrder.tsx (Form Component)
+│   │   └── Order.tsx (List Page)
+│   ├── components/
+│   │   ├── contentarea.tsx (DataTableDemo)
+│   │   └── ui/ (UI Components)
+│   └── api/
+│       └── serviceApi.ts (API Functions)
+
+server/
+├── src/
+│   ├── order.rout.ts (API Routes)
+│   ├── config/
+│   │   └── db.ts (Database Models)
+│   └── app.ts (Express App)
+
+================================================================================
+                            TECHNOLOGIES USED
+================================================================================
+
+Frontend:
+• React (Components, Hooks)
+• TypeScript (Type Safety)
+• Axios (HTTP Client)
+• React Router (Navigation)
+• Tailwind CSS (Styling)
+• TanStack Table (Data Table)
+
+Backend:
+• Node.js (Runtime)
+• Express.js (Web Framework)
+• TypeScript (Type Safety)
+• MongoDB (Database)
+• Mongoose (ODM)
+
+================================================================================
+                            END OF PROCESS FLOW DIAGRAM
+================================================================================
