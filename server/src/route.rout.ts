@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { DeliRoute, Order, saveDeliRoute, saveShipper } from "./config/db";
+import { DeliRoute, saveDeliRoute } from "./config/db";
 import { Shipper } from "./config/db";
 import mongoose from "mongoose";
 
@@ -59,17 +59,6 @@ router.get("/:id", async (req, res) => {
     res.json(shipper);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch shipper", error });
-  }
-});
-
-// GET /api/orders/pending/count
-router.get("/orders/pending/count", async (req, res) => {
-  try {
-    const pendingCount = await Order.countDocuments({ Status: "Pending" });
-    res.json({ pendingCount });
-  } catch (error) {
-    console.error("Error fetching pending orders count:", error);
-    res.status(500).json({ message: "Server error" });
   }
 });
 
