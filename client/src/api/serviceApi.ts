@@ -135,7 +135,7 @@ export const getShippers = async (): Promise<(ShipperData & { _id: string })[]> 
 //..........................................................................................................//
 
 export interface RouteData {
-  RouteId: string;
+  RouteId?: string;
   Hub: string;
   AssignPersonName: string;
   DateCreated?: Date;
@@ -153,11 +153,6 @@ export const getRoutes = async (): Promise<RouteData[]> => {
 export const getRoute = async (id: string): Promise<RouteData & { _id: string }> => {
   const res = await api.get(`/routes/${id}/routes`);
   return res.data;
-};
-
-export const generateRouteId = () => {
-  const random = Math.floor(100000 + Math.random() * 900000);
-  return `${random}`;
 };
 
 //..........................................................................................................//
