@@ -38,7 +38,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 
 export type Order = OrderData & { _id: string; createdAt: string; updatedAt: string };
 export type Shipper = ShipperData & { _id: string; createdAt: string; updatedAt: string };
-export type DeliRoute = RouteData & { RouteId: string; AssignPersonName: string; TotalPercel: number; _id: string; createdAt: string; updatedAt: string };
+export type DeliRoute = RouteData & { _id: string; createdAt: string; updatedAt: string };
 
 export const shipperColumns: ColumnDef<Shipper>[] = [
   // `shipperColumns` ဆိုတာ Shipper table အတွက် column definitions ဖြစ်တယ်။
@@ -229,8 +229,6 @@ export const RouteColumns: ColumnDef<DeliRoute>[] = [
 
 ]
 
-
-
 function TableSkeleton({ columns }: { columns: number }) {
   // TableSkeleton: loading state အတွင်းမှာ ဗလာ placeholder rows/header များကို ပြရန် component
   return (
@@ -262,21 +260,6 @@ function TableSkeleton({ columns }: { columns: number }) {
     </div>
   )
 }
-/**
- * DataTableDemo Component
- * 
- * Order data ကို sortable၊ filterable table တွင် search functionality ဖြင့် display လုပ်သည်။
- * Backend API မှ order data ကို fetch လုပ်ပြီး TanStack Table ကို အသုံးပြု၍ render လုပ်သည်။
- * 
- * Relationships:
- * - Order list ကို display လုပ်ရန် Order page component မှ အသုံးပြုသည်
- * - Backend မှ data fetch လုပ်ရန် getOrders() API function ကို call လုပ်သည်
- * - MongoDB fields များဖြင့် OrderData ကို extend လုပ်သော Order type ကို အသုံးပြုသည်
- * - GET /api/orders endpoint မှ data ကို render လုပ်သည်
- * - TrackingId ဖြင့် search functionality ကို provide လုပ်သည်
- * - Data fetch အတွင်း loading state ကို show လုပ်သည်
- * - Data array ဗလာဖြစ်သောအခါ "No orders found" ကို display လုပ်သည်
- */
 
 export function RouteDataTable({ Routes }: { Routes?: DeliRoute[] } = {}) {
   // RouteDataTable
@@ -430,21 +413,6 @@ export function RouteDataTable({ Routes }: { Routes?: DeliRoute[] } = {}) {
     </div>
   )
 }
-/**
- * ShipperDataTable Component
- * 
- * Shipper data ကို sortable၊ filterable table တွင် search functionality ဖြင့် display လုပ်သည်။
- * Backend API မှ shipper data ကို fetch လုပ်ပြီး TanStack Table ကို အသုံးပြု၍ render လုပ်သည်။
- * 
- * Relationships:
- * - Shipper list ကို display လုပ်ရန် Shipper page component မှ အသုံးပြုသည်
- * - Backend မှ data fetch လုပ်ရန် getShippers() API function ကို call လုပ်သည်
- * - MongoDB fields များဖြင့် ShipperData ကို extend လုပ်သော Shipper type ကို အသုံးပြုသည်
- * - GET /api/shippers endpoint မှ data ကို render လုပ်သည်
- * - ShipperId ဖြင့် search functionality ကို provide လုပ်သည်
- * - Data fetch အတွင်း loading state ကို show လုပ်သည်
- * - Data array ဗလာဖြစ်သောအခါ "No shippers found" ကို display လုပ်သည်
- */
 
 export function ShipperDataTable() {
   // ShipperDataTable

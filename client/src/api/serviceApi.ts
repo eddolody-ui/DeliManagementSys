@@ -151,7 +151,8 @@ export const getRoutes = async (): Promise<RouteData[]> => {
 };
 
 export const getRoute = async (id: string): Promise<RouteData & { _id: string }> => {
-  const res = await api.get(`/routes/${id}/routes`);
+  const res = await api.get(`/routes/${id}`);
+  console.log("API response:", res.data);
   return res.data;
 };
 

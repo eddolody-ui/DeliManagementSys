@@ -138,7 +138,7 @@ export { Shipper, saveShipper };
 
 //section for DeliRoute schema and model
 const RouteSchema = new mongoose.Schema({
-    RouteId: { type: String, required: false, sparse: true, default: function() {
+    RouteId: { type: String, default: function() {
       return Math.floor(100000 + Math.random() * 900000).toString();
     }},
     Hub: { type: String, required: true },

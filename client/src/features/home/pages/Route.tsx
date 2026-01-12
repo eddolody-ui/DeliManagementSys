@@ -19,7 +19,7 @@ export function RoutePage() {
   const [showModal, setShowModal] = useState(false);
   const [newHub, setNewHub] = useState("");  
   const [newRider, setNewRider] = useState("");
-  const [statusLoading] = useState(false);
+  const [statusLoading] = useState(true);
   const navigate = useNavigate();
   const [, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
