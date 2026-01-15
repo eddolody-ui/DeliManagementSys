@@ -7,8 +7,13 @@ import { useEffect, useState } from "react"
 import { getRoute, type RouteData } from "@/api/serviceApi"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type{ OrderData } from "@/api/serviceApi"
+import { getOrder } from "@/api/serviceApi"
+import { useNavigate } from "react-router-dom";
+import { addOrderToRoute } from "@/api/serviceApi";
 
 export function RouteDetail() {
+  const navigate = useNavigate();
   const {RouteId } = useParams<{ RouteId: string }>()
   const [route, setRoute] = useState<(RouteData & { _id: string }) | null>(null)
   const [loading, setLoading] = useState(true)
@@ -20,6 +25,15 @@ export function RouteDetail() {
   const [statusLoading] = useState(false);
   const [statusError] = useState<string | null>(null);
   const [changeReason, setChangeReason] = useState("");
+
+  // User input for trackingId
+const [inputTrackingId, setInputTrackingId] = useState("");
+
+// Orders fetched based on input
+const [fetchedOrders, setFetchedOrders] = useState<
+  (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
+>([]);
+const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 0), 0);
 
   // Update newStatus when modal opens
   const openStatusModal = () => {
@@ -147,7 +161,7 @@ export function RouteDetail() {
                   </div>
                   <div className="mb-6">
                     <div className="text-ms text-gray-400 ">Amount</div>
-                    <div className="mt-1 text-sm text-gray-700">{'—'}</div>
+                    <div className="mt-1 text-sm text-gray-700">{totalAmount} MMK</div>
                   </div>
                   <div className="mb-6">
                     <div className="text-ms text-gray-400 ">Delivery Address</div>
@@ -168,7 +182,8 @@ export function RouteDetail() {
                     <div className="flex">
                       <div className="font-semibold text-gray-800">RouteID# {route.RouteId}</div>
                     </div>
-                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" onClick={openStatusModal}>Update Status</Button>
+                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110"
+                     onClick={openStatusModal}>Add Order To Route</Button>
                             {/* Status Update Modal */}
                             {showModal && (
                               <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray bg-opacity-30 backdrop-blur-sm">
@@ -229,14 +244,70 @@ export function RouteDetail() {
                               </div>
                             )}
                   </div>
+<div className="mb-4 flex gap-2">
+  <input
+    type="text"
+    placeholder="Enter Tracking ID"
+    value={inputTrackingId}
+    onChange={(e) => setInputTrackingId(e.target.value)}
+    className="border rounded px-4 py-2 flex-1"
+  />
+
+<Button
+  onClick={async () => {
+    if (!inputTrackingId) return;
+    if (!RouteId) {
+      alert("Route ID missing");
+      return;
+    }
+
+    try {
+      await addOrderToRoute(RouteId, inputTrackingId);
+
+      const order = await getOrder(inputTrackingId);
+      setFetchedOrders((prev) => [order, ...prev]);
+
+      setInputTrackingId("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add order");
+    }
+  }}
+>
+  Add
+</Button>
+</div>
+                  <div className="grid grid-cols-2 space-between">
                   {/* Tracking History / Timeline */}    
                   <div className="mt-8">
                     <div className="text-sm font-medium mb-4">Route History</div>
-                      <ScrollArea className="h-64 rounded-md border-l p-4">
+                      <ScrollArea className="h-auto border-l p-4">
                         <ul className="space-y-4">
                         </ul>
                       </ScrollArea>
-                    </div>            
+                    </div>
+                  <div className="mt-8">
+                    <div className="text-sm font-medium mb-4">Total Order</div>
+                      <ScrollArea className="h-64 border-l p-4">
+                        <ul className="space-y-4">
+                          {fetchedOrders.length > 0 ? (
+                            fetchedOrders.map((order) => (
+                              <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)}
+                              className="p-2 border-l flex justify-between items-center">
+                                <div>
+                                  <div className="font-semibold text-gray-800">{order.CustomerName}</div>
+                                  <div className="text-sm text-gray-500">Tracking ID: {order.TrackingId}</div>
+                                  <div className="text-sm text-gray-500">Amount: {order.Amount}</div>
+                                </div>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-sm text-gray-500">No orders added yet</li>
+                          )}
+                        </ul>
+                      </ScrollArea>
+                    </div>         
+                    </div>               
                   </div>
               </div>
             </div>

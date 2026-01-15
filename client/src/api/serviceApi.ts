@@ -1,4 +1,4 @@
-
+import axios from "axios";
 /**
  * updateOrderStatus Function
  * Relationships:
@@ -20,6 +20,16 @@ export const updateOrderStatus = async ( // * Updates the status of an order and
 };
 import api from "./axois";
 
+export const addOrderToRoute = async (
+  routeId: string,
+  trackingId: string
+) => {
+  const res = await axios.put(
+    `/api/routes/${routeId}/add-order`,
+    { trackingId }
+  );
+  return res.data;
+};
 /**
  * OrderData Interface
  * 

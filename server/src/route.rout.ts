@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DeliRoute, saveDeliRoute } from "./config/db";
 import mongoose from "mongoose";
-
+import { Order } from "./config/db";
 const router = Router();
 
 // Create new route
@@ -11,6 +11,40 @@ router.post("/", async (req, res) => {
     res.status(201).json(savedRoute);
   } catch (error) {
     res.status(400).json({ message: "Route save failed", error });
+  }
+});
+
+router.put("/:routeId/add-order", async (req, res) => {
+  try {
+    const { trackingId } = req.body;
+
+    const order = await Order.findOne({ TrackingId: trackingId });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const route = await DeliRoute.findOne({ RouteId: req.params.routeId });
+    if (!route) {
+      return res.status(404).json({ message: "Route not found" });
+    }
+
+    // prevent duplicate
+    if (route.orders.includes(order._id)) {
+      return res.status(400).json({ message: "Order already in route" });
+    }
+
+    route.orders.push(order._id);
+    route.totalAmount += order.Amount;
+
+    await route.save();
+
+    res.json({
+      message: "Order added to route",
+      route,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

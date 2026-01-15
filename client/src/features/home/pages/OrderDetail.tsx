@@ -198,8 +198,8 @@ export function OrderDetail() {
                 <div className="col-span-12 md:col-span-6 px-8 py-8 space-y-6">
                   <div className="flex justify-between items-center">
                     <div className="font-semibold text-gray-800">Tracking ID #{order.TrackingId}</div>
-                    <Button variant="ghost" onClick={openStatusModal} disabled={isCancelled}>
-                      Update Status
+                    <Button variant="ghost" onClick={openStatusModal} disabled={isCancelled} className="border-r border-b  ">
+                      Edits
                     </Button>
                   </div>
 

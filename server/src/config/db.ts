@@ -144,7 +144,13 @@ const RouteSchema = new mongoose.Schema({
     Hub: { type: String, required: true },
     AssignPersonName: { type: String, required: true },
     DateCreated: { type: Date, default: Date.now },
-  }, { timestamps: true });
+    order:[
+    {   type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",},
+    ],
+    totalAmount: { type: Number, default: 0,},
+    }, 
+    { timestamps: true });
 
 const DeliRoute = mongoose.models.DeliRoute || mongoose.model("DeliRoute", RouteSchema);
 
