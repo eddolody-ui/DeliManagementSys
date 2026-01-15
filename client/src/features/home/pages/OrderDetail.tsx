@@ -165,9 +165,9 @@ export function OrderDetail() {
         <SidebarInset className="flex flex-col w-full">
           <div className={`p-6 rounded-lg h-full ${statusBgColor}`}>
             <div className="max-w-5xl mx-auto overflow-hidden">
-              <div className="grid grid-cols-12 gap-6">
+              <div className="grid grid-cols-9 gap-10">
                 {/* Left column */}
-                <div className="col-span-12 md:col-span-3 border-r px py-8 space-y-4">
+                <div className="col-span-12 md:col-span-3 border-r px-6 py-8 space-y-4">
                   <div>
                     <div className="text-ms text-gray-400">Customer Name</div>
                     <div className="mt-1 font-medium">{order.CustomerName || "—"}</div>
