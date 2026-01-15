@@ -576,7 +576,7 @@ export function ShipperDataTable() {
   )
 }
 
-export function OrderDataTable({ orders }: { orders?: Order[] } = {}) {
+export function OrderDataTable({ orders }: { orders?: Order[] }  = {}) {
   // OrderDataTable
   // - API မှ `getOrders()` ကို call ပြီး orders ကိုယူသည်။
   // - တကယ်ရှိရင် `getShippers()` နဲ့ merge လုပ်၍ shipper info ကို order နှင့် ပေါင်းစပ်ပေးသည်။

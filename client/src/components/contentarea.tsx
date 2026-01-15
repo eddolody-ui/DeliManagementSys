@@ -244,9 +244,7 @@ export function TopNavbar() {
           <DropdownMenuItem asChild>
             <Link to="/settings">Settings</Link>
           </DropdownMenuItem>
-
           <DropdownMenuSeparator />
-
           <DropdownMenuItem className="text-red-600">
             Logout
           </DropdownMenuItem>
@@ -350,7 +348,7 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
   
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <StatusCard
+    <StatusCard 
         title="Total Orders"
         value={totalOrders.toString()}
         icon={<FiShoppingCart className="h-5 w-5" />}
@@ -772,4 +770,17 @@ function TopNavSearch() {
       onChange={onChange}
     />
   )
+}
+
+import * as XLSX from "xlsx"
+
+export function exportToExcel<T>(
+  data: T[],
+  fileName: string = "data.xlsx"
+) {
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const workbook = XLSX.utils.book_new()
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+  XLSX.writeFile(workbook, fileName)
 }
