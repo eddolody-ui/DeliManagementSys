@@ -259,6 +259,8 @@ export function TopNavbar() {
 export default function Dashboard() {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [DeliveredCount, setDeliveredCount] = useState<number>(0);
+  const [DeliveredAmountCount, setDeliveredAmountCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchOrderStats = async () => {
@@ -267,11 +269,19 @@ export default function Dashboard() {
         setTotalOrders(orders.length);
         const pendingOrders = orders.filter(order => order.Status === 'Pending');
         setPendingCount(pendingOrders.length);
+        const deliveredOrders = orders.filter(order => order.Status === 'Delivered');
+        setDeliveredCount(deliveredOrders.length);
+        const deliveredAmount = orders
+          .filter(order => order.Status === 'Delivered')
+          .reduce((sum, order) => sum + (order.Amount || 0), 0);
+        setDeliveredAmountCount(deliveredAmount);
       } catch (error) {
         console.error("Failed to fetch order stats:", error);
         // Set default values if API fails
         setTotalOrders(0);
         setPendingCount(0);
+        setDeliveredAmountCount(0);
+        setDeliveredCount(0);
       }
     };
     fetchOrderStats();
@@ -292,16 +302,14 @@ export default function Dashboard() {
     />
 
     <StatusCard
-        title="Customers"
-        value={320}
-        trend="down"
-        trendValue="3% this week"
+        title="Delivered"
+        value={DeliveredCount.toString()}
         icon={<Users className="h-5 w-5" />}
         />
 
     <StatusCard
-        title="Shipment"
-        value={628}
+        title="Amount"
+        value={DeliveredAmountCount.toString()+" MMK"}
         trend="up"
         trendValue="70% this month"
         icon={<IoCarSport className="h-5 w-5" />}

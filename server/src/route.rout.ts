@@ -23,6 +23,9 @@ router.put("/:routeId", async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (order.Status === "Delivered") {
+      return res.status(400).json({ message: "Cannot add route: Order is already delivered." });
+    }
 
 
     // Try to find route by RouteId or _id
