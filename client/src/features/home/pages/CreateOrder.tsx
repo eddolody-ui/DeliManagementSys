@@ -5,6 +5,15 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { createOrder, getShippers, type ShipperData } from "@/api/serviceApi";
+import { UploadCloud, FileText } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 /**
  * CreateOrderForm Component
@@ -19,6 +28,7 @@ export function CreateOrderForm() {
   const [error, setError] = useState<string | null>(null);
 
   const [, setShippers] = useState<(ShipperData & { _id: string })[]>([]);
+  const [file, setFile] = useState<File | null>(null)
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -96,7 +106,6 @@ export function CreateOrderForm() {
             <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">
               Create Order
             </h2>
-
             {error && (
               <div className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded p-2">
                 {error}
@@ -180,25 +189,26 @@ export function CreateOrderForm() {
                   required
                 />
               </div>
-
               {/* Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type
-                </label>
-                <select
-                  name="Type"
-                  value={formData.Type}
-                  onChange={handleChange}
-                  className="rounded-lg focus:ring-2 focus:ring-blue-500 border border-gray-300 px-3 py-2 bg-white text-sm w-full"
-                  required
-                >
-                  <option value="COD">COD</option>
-                  <option value="Prepaid">Prepaid</option>
-                  <option value="Return">Return</option>
-                </select>
-              </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select
+                    value={formData.Type}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, Type: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="COD">COD</SelectItem>
+                      <SelectItem value="Prepaid">Prepaid</SelectItem>
+                      <SelectItem value="Return">Return</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
               {/* Note */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -213,16 +223,42 @@ export function CreateOrderForm() {
                 />
               </div>
             </div>
+                <div className="">
+                  <Label className="block text-sm font-medium text-gray-700 mb-2">
+                    Attachment
+                  </Label>
+
+                  <div className="relative w-full">
+                    {/* Icon */}
+                    <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+
+                    {/* File Input */}
+                    <Input
+                      type="file"
+                      className="pl-10 w-full cursor-pointer"
+                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                      accept=".jpg,.jpeg,.png,.pdf"
+                    />
+                  </div>
+
+                  {file && (
+                    <div className="flex items-center gap-2 text-xs text-gray-600 mt-2">
+                      <FileText className="h-4 w-4" />
+                      <span>{file.name}</span>
+                    </div>
+                  )}
+                </div>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-4 md:col-span-2">
               <Button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white"
+                className="px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-white"
               >
                 {loading ? "Creating..." : "Create Order"}
               </Button>
+            </div>
             </div>
           </form>
         </div>

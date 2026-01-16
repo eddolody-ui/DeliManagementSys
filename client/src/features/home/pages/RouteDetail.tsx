@@ -4,32 +4,31 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { getRoute, type OrderData, type RouteData } from "@/api/serviceApi"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
+import { getRoute, type RouteData } from "@/api/serviceApi"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import type{ OrderData } from "@/api/serviceApi"
+import { getOrder } from "@/api/serviceApi"
+import { useNavigate } from "react-router-dom";
+import { addOrderToRoute } from "@/api/serviceApi";
 
 export function RouteDetail() {
-  const { routeId } = useParams<{ routeId: string }>()
+  const navigate = useNavigate();
+  const {RouteId } = useParams<{ RouteId: string }>()
   const [route, setRoute] = useState<(RouteData & { _id: string }) | null>(null)
-  const [order] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Modal and status update state
-  const [showModal, setShowModal] = useState(false);
-  const [newStatus, setNewStatus] = useState("");
-  const [statusLoading] = useState(false);
-  const [statusError] = useState<string | null>(null);
-  const [changeReason, setChangeReason] = useState("");
+  // User input for trackingId
+const [inputTrackingId, setInputTrackingId] = useState("");
 
-  // Update newStatus when modal opens
-  const openStatusModal = () => {
-    setNewStatus(order?.Status || "");
-    setShowModal(true);
-  };
+// Orders fetched based on input
+const [, setFetchedOrders] = useState<
+  (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
+>([])
 
   useEffect(() => {
     const fetchRoute = async () => {
-      if (!routeId) {
+      if (!RouteId) {
         setError("No Route ID provided")
         setLoading(false)
         return
@@ -37,8 +36,9 @@ export function RouteDetail() {
 
       try {
         // Fetch route by RouteId (RouteId may be custom string or Mongo _id)
-        const routeData = await getRoute(routeId)
-        setRoute(routeData)
+        const routeData = await getRoute(RouteId)
+        console.log("Fetched route data:", routeData)
+        setRoute(routeData);
 
         // Handle shipper data - either populated object or string reference
       } catch (err: any) {
@@ -58,7 +58,7 @@ export function RouteDetail() {
     }
 
     fetchRoute()
-  }, [routeId])
+  }, [RouteId])
 
   if (loading) {
     return (
@@ -131,95 +131,132 @@ export function RouteDetail() {
         <SidebarInset className="flex flex-col w-full">
 
           {/* Centered card matching mock: left info | center status + timeline | right actions */}
-          <div className={`p-6 rounded-lg`} >
+          <div className="p-6 rounded-lg h-full">
             <div className="max-w-5xl mx-auto overflow-hidden">
               <div className="grid grid-cols-12">
                 {/* Left column: customer & seller info (3/12) */}
                 <div className="col-span-12 md:col-span-3 border-r px-6 py-8">
                   <div className="mb-6">
-                    <div className="text-ms text-gray-400">Rider Name</div>
-                    <div className="mt-1 font-medium ">{route.AssignPersonName || '—'}</div>
+                    <div className="text-ms text-gray-400">Name</div>
+                    <div className="mt-1 font-medium ">{route.AssignPersonName}</div>
                   </div>
                   <div className="mb-6">
                     <div className="text-ms text-gray-400 ">Hub</div>
-                    <div className="mt-1 text-sm text-black-700">{route.Hub || '—'}</div>
+                    <div className="mt-1 text-sm text-black-700">{route.Hub ||'—'}</div>
+                  </div>
+                  <div className="mb-6">
+                    <div className="text-ms text-gray-400 ">Amount</div>
+                    <div className="mt-1 text-sm text-gray-700">{route.totalAmount || 0} MMK</div>
+                  </div>
+                  <div className="mb-6">
+                    <div className="text-ms text-gray-400 ">Delivery Address</div>
+                    <div className="mt-1 text-sm text-gray-700">{'—'}</div>
+                  </div>
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="text-ms text-gray-400 ">Shipper</div>
+                    <div className="mt-1 text-sm">{'N/A'}</div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="text-ms text-gray-400 ">Shipper Contact</div>
+                    <div className="text-sm">{'—'}</div>
                   </div>
                 </div>
-
                 {/* Middle column: tracking & status (6/12) */}
                 <div className="col-span-12 md:col-span-6 px-8 py-8">
                   <div className="flex items-center mb-6 justify-between w-170">
                     <div className="flex">
-                      <div className="font-semibold text-gray-800">Tracking ID #{route.RouteId}</div>
+                      <div className="font-semibold text-gray-800">RouteID# {route.RouteId}</div>
                     </div>
-                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" onClick={openStatusModal}>Update Status</Button>
-                            {/* Status Update Modal */}
-                            {showModal && (
-                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray bg-opacity-30 backdrop-blur-sm">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-8 relative animate-fade-in">
-                                  <button
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
-                                    onClick={() => setShowModal(false)}
-                                    aria-label="Close"
-                                    disabled={statusLoading  }                                  >
-                                    ×
-                                  </button>
-                                  <h2 className="text-2xl font-bold mb-6 text-gray-900">Update Order Status</h2>
-                                  <div className="mb-6">
-                                    <label htmlFor="status-select" className="block text-sm font-medium text-gray-700 mb-2">Select new status</label>
-                                    <Select
-                                        value={newStatus}
-                                        onValueChange={(value) => setNewStatus(value)}
-                                        disabled={statusLoading || order?.Status === "Cancelled"} // disable if cancelled
-                                      >
-                                        <SelectTrigger className="w-full min-h-[44px] text-gray-800 font-semibold shadow-sm">
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="Pending">Pending</SelectItem>
-                                          <SelectItem value="Hub Inbound">Hub Inbound</SelectItem>
-                                          <SelectItem value="Arrive At Softing Hub">Arrive At Softing Hub</SelectItem>
-                                          <SelectItem value="In Route">In Route</SelectItem>
-                                          <SelectItem value="Delivered">Delivered</SelectItem>
-                                          <SelectItem value="Return To Sender">Return To Sender</SelectItem>
-                                          <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                  </div>
-                                  {statusError && <div className="text-red-600 mb-4 text-sm">{statusError}</div>}
-                                  <textarea
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 hover:bg-blue-50"
-                                    rows={3}
-                                    placeholder="Changed Reason"
-                                    value={changeReason}
-                                    onChange={e => setChangeReason(e.target.value)}
-                                    disabled={statusLoading}
-                                  />
-                                  <div className="flex gap-3 justify-end">
-                                    <Button
-                                      disabled={statusLoading || !newStatus}                                    >
-                                      {statusLoading ? "Updating..." : "Update"}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowModal(false)}
-                                      disabled={statusLoading}
-                                      className="px-6 py-2 font-semibold rounded-lg border-gray-300"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                   </div>
+                  <div className="w-full">
+                    <div className="mb-4 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter Tracking ID"
+                        value={inputTrackingId}
+                        onChange={(e) => setInputTrackingId(e.target.value)}
+                        className="border rounded px-4 py-2 flex-1"
+                      />
+                    <Button
+                      onClick={async () => {
+                        if (!inputTrackingId) return;
+                        if (!RouteId) {
+                          alert("Route ID missing");
+                          return;
+                        }
+
+                        try {
+                          await addOrderToRoute(RouteId, inputTrackingId);
+
+                          const order = await getOrder(inputTrackingId);
+                          setFetchedOrders((prev) => [order, ...prev]);
+
+                          setInputTrackingId("");
+                        } catch (err) {
+                          console.error(err);
+                          alert("Failed to add order");
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
+                    </div>
+                  <div className="grid space-between w-full md:grid-cols-2 gap-6">
                   {/* Tracking History / Timeline */}    
+                  <div className="mt-8">
+                    <div className="text-sm font-medium mb-4">Route History</div>
+                      <ScrollArea className="h-auto border-l p-4">
+                        <ul className="space-y-4">
+                          {route.log && route.log.length > 0 ? (
+                            route.log.map((entry: any, idx: number) => (
+                              <li key={idx} className="mb-1 text-xs text-gray-700">
+                                <span className="font-bold">{entry.status}</span>
+                                {entry.message && <>: {entry.message}</>}
+                                {entry.timestamp && (
+                                  <span className="ml-2 text-gray-400">{new Date(entry.timestamp).toLocaleString()}</span>
+                                )}
+                                {entry.createdBy && (
+                                  <span className="ml-2 text-gray-400">by {entry.createdBy}</span>
+                                )}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-sm text-gray-500">No route history yet</li>
+                          )}
+                        </ul>
+                      </ScrollArea>
                   </div>
+                  <div className="mt-8">
+                    <div className="text-sm font-medium mb-4">Total Order </div>
+                      <ScrollArea className="h-64 border-l p-4">
+                        <ul className="space-y-4">
+                          {route.orders && route.orders.length > 0 ? (
+                            route.orders.map((order: any) => (
+                              <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)}
+                              className="p-2 border-l flex justify-between items-center">
+                                <div>
+                                  <div className="font-semibold text-gray-800">{order.CustomerName}</div>
+                                  <div className="text-sm text-gray-500">Tracking ID: {order.TrackingId}</div>
+                                  <div className="text-sm text-gray-500">Amount: {order.Amount}</div>
+                                  <div className="text-sm text-gray-500">Status: {order.Status}</div>
+                                </div>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-sm text-gray-500">No orders in this route</li>
+                          )}
+                        </ul>
+                      </ScrollArea>
+                    </div>         
+                    </div>               
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
+
   )
 }

@@ -244,9 +244,7 @@ export function TopNavbar() {
           <DropdownMenuItem asChild>
             <Link to="/settings">Settings</Link>
           </DropdownMenuItem>
-
           <DropdownMenuSeparator />
-
           <DropdownMenuItem className="text-red-600">
             Logout
           </DropdownMenuItem>
@@ -261,6 +259,8 @@ export function TopNavbar() {
 export default function Dashboard() {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [DeliveredCount, setDeliveredCount] = useState<number>(0);
+  const [DeliveredAmountCount, setDeliveredAmountCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchOrderStats = async () => {
@@ -269,11 +269,19 @@ export default function Dashboard() {
         setTotalOrders(orders.length);
         const pendingOrders = orders.filter(order => order.Status === 'Pending');
         setPendingCount(pendingOrders.length);
+        const deliveredOrders = orders.filter(order => order.Status === 'Delivered');
+        setDeliveredCount(deliveredOrders.length);
+        const deliveredAmount = orders
+          .filter(order => order.Status === 'Delivered')
+          .reduce((sum, order) => sum + (order.Amount || 0), 0);
+        setDeliveredAmountCount(deliveredAmount);
       } catch (error) {
         console.error("Failed to fetch order stats:", error);
         // Set default values if API fails
         setTotalOrders(0);
         setPendingCount(0);
+        setDeliveredAmountCount(0);
+        setDeliveredCount(0);
       }
     };
     fetchOrderStats();
@@ -294,16 +302,14 @@ export default function Dashboard() {
     />
 
     <StatusCard
-        title="Customers"
-        value={320}
-        trend="down"
-        trendValue="3% this week"
+        title="Delivered"
+        value={DeliveredCount.toString()}
         icon={<Users className="h-5 w-5" />}
         />
 
     <StatusCard
-        title="Shipment"
-        value={628}
+        title="Amount"
+        value={DeliveredAmountCount.toString()+" MMK"}
         trend="up"
         trendValue="70% this month"
         icon={<IoCarSport className="h-5 w-5" />}
@@ -350,7 +356,7 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
   
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <StatusCard
+    <StatusCard 
         title="Total Orders"
         value={totalOrders.toString()}
         icon={<FiShoppingCart className="h-5 w-5" />}
@@ -772,4 +778,17 @@ function TopNavSearch() {
       onChange={onChange}
     />
   )
+}
+
+import * as XLSX from "xlsx"
+
+export function exportToExcel<T>(
+  data: T[],
+  fileName: string = "data.xlsx"
+) {
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const workbook = XLSX.utils.book_new()
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+  XLSX.writeFile(workbook, fileName)
 }

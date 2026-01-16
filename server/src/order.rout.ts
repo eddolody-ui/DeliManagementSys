@@ -105,7 +105,10 @@ router.get("/:trackingId", async (req, res) => {
     }); // Remove .populate('shipperId')
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({
+        message: `Order with TrackingId '${req.params.trackingId}' not found`,
+        trackingId: req.params.trackingId
+      });
     }
 
     res.json(order);

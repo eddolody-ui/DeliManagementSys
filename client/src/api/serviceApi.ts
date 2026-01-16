@@ -5,21 +5,42 @@
  * - Called from OrderDetail page when status is changed
  * - PATCH /api/orders/:trackingId/status endpoint
  */
-export const updateOrderStatus = async ( // * Updates the status of an order and appends a log entry.
+export const updateOrderStatus = async (
   trackingId: string,
   status: string,
   message?: string,
   createdBy?: string
 ) => {
-  const res = await api.patch(`/orders/${trackingId}/status`, {
+  const res = await api.patch(`/api/orders/${trackingId}/status`, {
     status,
     message,
     createdBy,
   });
   return res.data;
 };
-import api from "./axois";
 
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:5000",
+});
+
+export const addOrderToRoute = async (
+  routeId: string,
+  trackingId: string
+) => {
+  try {
+    const res = await api.put(`/api/routes/${routeId}`, { trackingId });
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      // Backend returned an error
+      throw new Error(error.response.data.message || "Failed to add order");
+    } else {
+      throw new Error(error.message || "Network error");
+    }
+  }
+};
 /**
  * OrderData Interface
  * 
@@ -70,7 +91,7 @@ export interface OrderLog {
  * - Backend server ၏ saveOrder function နှင့် connected ဖြစ်သည်
  */
 export const createOrder = async (orderData: OrderData) => {
-  const res = await api.post("/orders", orderData);
+  const res = await api.post("api/orders", orderData);
   return res.data;
 };
 
@@ -87,7 +108,7 @@ export const createOrder = async (orderData: OrderData) => {
  * - Order page table တွင် data ကို display လုပ်သည်
  */
 export const getOrders = async (): Promise<OrderData[]> => {
-  const res = await api.get("/orders");
+  const res = await api.get("/api/orders");
   return res.data;
 };
 
@@ -102,7 +123,7 @@ export const getOrders = async (): Promise<OrderData[]> => {
  * - Backend server ၏ Order.findOne() နှင့် connected ဖြစ်သည်
  */
 export const getOrder = async (trackingId: string): Promise<OrderData & { _id: string; createdAt: string; updatedAt: string }> => {
-  const res = await api.get(`/orders/${trackingId}`);
+  const res = await api.get(`/api/orders/${trackingId}`);
   return res.data;
 };
 //..........................................................................................................//
@@ -118,46 +139,48 @@ export interface ShipperData {
 }
 
 export const createShipper = async (shipperData: ShipperData) => {
-  const res = await api.post("/shippers", shipperData);
+  const res = await api.post("api/shippers", shipperData);
   return res.data;
 };
 
 export const getShipper = async (id: string): Promise<ShipperData & { _id: string }> => {
-  const res = await api.get(`/shippers/${id}`);
+  const res = await api.get(`api/shippers/${id}`);
   return res.data;
 };
 
 export const getShippers = async (): Promise<(ShipperData & { _id: string })[]> => {
-  const res = await api.get("/shippers");
+  const res = await api.get("api/shippers");
   return res.data;
 };
 
 //..........................................................................................................//
 
 export interface RouteData {
-  RouteId: string;
+  RouteId?: string;
   Hub: string;
   AssignPersonName: string;
   DateCreated?: Date;
+  orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[];
+  totalAmount?: number;
+  log?: {
+    status: string;
+    message?: string;
+  }[];
 }
 export const createRoute = async (RouteData: RouteData) => {
-  const res = await api.post("/Routes", RouteData);
+  const res = await api.post("api/routes", RouteData);
   return res.data;
 }
 
 export const getRoutes = async (): Promise<RouteData[]> => {
-  const res = await api.get("/Routes");
+  const res = await api.get("api/routes");
   return res.data;
 };
 
-export const getRoute = async (id: string): Promise<RouteData & { _id: string }> => {
-  const res = await api.get(`/Routes/${id}`);
+export const getRoute = async (id: string): Promise<RouteData & { _id: string; orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[] }> => {
+  const res = await api.get(`api/routes/${id}`);
+  console.log("API response:", res.data);
   return res.data;
-};
-
-export const generateRouteId = () => {
-  const random = Math.floor(100000 + Math.random() * 900000);
-  return `${random}`;
 };
 
 //..........................................................................................................//

@@ -1,77 +1,125 @@
 import { Router } from "express";
-import { DeliRoute, Order, saveDeliRoute, saveShipper } from "./config/db";
-import { Shipper } from "./config/db";
+import { DeliRoute, saveDeliRoute } from "./config/db";
 import mongoose from "mongoose";
-
+import { Order } from "./config/db";
 const router = Router();
+
+// Create new route
 router.post("/", async (req, res) => {
   try {
     const savedRoute = await saveDeliRoute(req.body);
     res.status(201).json(savedRoute);
   } catch (error) {
-    res.status(400).json({ message: "Shipper save failed", error });
+    res.status(400).json({ message: "Route save failed", error });
   }
 });
 
+router.put("/:routeId", async (req, res) => {
+  try {
+    const { trackingId } = req.body;
+    console.log("BODY:", req.body); 
+    console.log("PARAM:", req.params.routeId);
+    const order = await Order.findOne({ TrackingId: trackingId });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.Status === "Delivered") {
+      return res.status(400).json({ message: "Cannot add route: Order is already delivered." });
+    }
+
+
+    // Try to find route by RouteId or _id
+    let route = await DeliRoute.findOne({ RouteId: req.params.routeId });
+    if (!route && mongoose.Types.ObjectId.isValid(req.params.routeId)) {
+      route = await DeliRoute.findById(req.params.routeId);
+    }
+    if (!route) {
+      return res.status(404).json({ message: "Route not found" });
+    }
+
+    // Ensure orders is an array of ObjectIds
+    const orderIdStr = order._id.toString();
+    const routeOrderIds = Array.isArray(route.orders)
+      ? route.orders.map((oid: any) => oid.toString())
+      : [];
+    if (routeOrderIds.includes(orderIdStr)) {
+      // If already present, update totalAmount only (or skip)
+      return res.json({
+        message: "Order already in route, no changes made",
+        route,
+      });
+    }
+
+    route.orders.push(order._id);
+    route.totalAmount += order.Amount;
+
+    // Add log entry for this route change
+    if (!Array.isArray(route.log)) route.log = [];
+    route.log.push({
+      status: "Order Added",
+      message: `Order ${order.TrackingId} added to route`,
+      timestamp: new Date(),
+    });
+
+    // Update order status and log
+    order.Status = "In Route";
+    if (!Array.isArray(order.log)) order.log = [];
+    order.log.push({
+      status: "In Route",
+      message: `Order added to route ${route.RouteId}`,
+      timestamp: new Date(),
+      createdBy: req.body.createdBy || "system"
+    });
+    await order.save();
+
+    await route.save();
+
+    res.json({
+      message: "Order added to route and status updated to In Route",
+      route,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all routes
 router.get("/", async (req, res) => {
   try {
-    const routes = await DeliRoute.find({});
+    // Populate orders so frontend can see order statuses for progress bar
+    const routes = await DeliRoute.find({}).populate("orders");
     res.json(routes);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch shippers", error });
+    res.status(500).json({ message: "Failed to fetch routes", error });
   }
 });
 
-router.get("/:id/routes", async (req, res) => {
+// Get route by _id or RouteId
+router.get("/:id", async (req: import("express").Request, res: import("express").Response) => {
   try {
-    const RouteId = req.params.id;
-    const query = mongoose.Types.ObjectId.isValid(RouteId)
-      ? { RouteId }  // if using ObjectId
-      : { RouteId: RouteId }; // if using string
+    const id: string = req.params.id;
 
-    const route = await DeliRoute.find(query).sort({ createdAt: -1 });
-    res.json(route);
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.get("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Try to find by _id first (MongoDB ObjectId)
-    let shipper = null;
+    // Try to find by MongoDB ObjectId (_id)
+    let route = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
-      shipper = await Shipper.findById(id);
+      route = await DeliRoute.findById(id).populate("orders");
     }
 
-    // If not found by _id, try to find by ShipperId (custom string field)
-    if (!shipper) {
-      shipper = await Shipper.findOne({ ShipperId: id });
+    // If not found by _id, try to find by RouteId (custom string)
+    if (!route) {
+      route = await DeliRoute.findOne({ RouteId: id }).populate("orders");
     }
 
-    if (!shipper) {
-      return res.status(404).json({ message: "Shipper not found" });
+    if (!route) {
+      return res.status(404).json({ message: "Route not found" });
     }
 
-    res.json(shipper);
+    res.json(route); // return **single object**, not array
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch shipper", error });
+    console.error("Error fetching route:", error);
+    res.status(500).json({ message: "Failed to fetch route", error });
   }
 });
-
-// GET /api/orders/pending/count
-router.get("/orders/pending/count", async (req, res) => {
-  try {
-    const pendingCount = await Order.countDocuments({ Status: "Pending" });
-    res.json({ pendingCount });
-  } catch (error) {
-    console.error("Error fetching pending orders count:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 
 export default router;
