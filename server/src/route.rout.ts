@@ -50,6 +50,14 @@ router.put("/:routeId", async (req, res) => {
     route.orders.push(order._id);
     route.totalAmount += order.Amount;
 
+    // Add log entry for this route change
+    if (!Array.isArray(route.log)) route.log = [];
+    route.log.push({
+      status: "Order Added",
+      message: `Order ${order.TrackingId} added to route`,
+      timestamp: new Date(),
+    });
+
     await route.save();
 
     res.json({

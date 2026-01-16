@@ -159,6 +159,16 @@ const RouteSchema = new mongoose.Schema(
     ],
 
     totalAmount: { type: Number, default: 0 },
+
+    // Route process log
+    log: [
+      {
+        status: { type: String },
+        message: { type: String },
+        timestamp: { type: Date, default: Date.now },
+        createdBy: { type: String },
+      }
+    ],
   },
   { timestamps: true }
 );

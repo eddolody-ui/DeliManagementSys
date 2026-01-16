@@ -5,7 +5,6 @@ import { ArrowLeft } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { getRoute, type RouteData } from "@/api/serviceApi"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type{ OrderData } from "@/api/serviceApi"
 import { getOrder } from "@/api/serviceApi"
@@ -19,26 +18,13 @@ export function RouteDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Modal and status update state
-  const [showModal, setShowModal] = useState(false);
-  const [newStatus, setNewStatus] = useState("");
-  const [statusLoading] = useState(false);
-  const [statusError] = useState<string | null>(null);
-  const [changeReason, setChangeReason] = useState("");
-
   // User input for trackingId
 const [inputTrackingId, setInputTrackingId] = useState("");
 
 // Orders fetched based on input
 const [, setFetchedOrders] = useState<
   (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
->([]);
-
-  // Update newStatus when modal opens
-  const openStatusModal = () => {
-    setShowModal(true);
-  };
-  
+>([])
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -181,68 +167,8 @@ const [, setFetchedOrders] = useState<
                     <div className="flex">
                       <div className="font-semibold text-gray-800">RouteID# {route.RouteId}</div>
                     </div>
-                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110"
-                     onClick={openStatusModal}>Add Order To Route</Button>
-                            {/* Status Update Modal */}
-                            {showModal && (
-                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray bg-opacity-30 backdrop-blur-sm">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-8 relative animate-fade-in">
-                                  <button
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
-                                    onClick={() => setShowModal(false)}
-                                    aria-label="Close"
-                                    disabled={statusLoading}                                  >
-                                    ×
-                                  </button>
-                                  <h2 className="text-2xl font-bold mb-6 text-gray-900">Update Order Status</h2>
-                                  <div className="mb-6">
-                                    <label htmlFor="status-select" className="block text-sm font-medium text-gray-700 mb-2">Select new status</label>
-                                    <Select
-                                        value={newStatus}
-                                        onValueChange={(value) => setNewStatus(value)}
-                                        disabled={statusLoading } // disable if cancelled
-                                      >
-                                        <SelectTrigger className="w-full min-h-[44px] text-gray-800 font-semibold shadow-sm">
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="Pending">Pending</SelectItem>
-                                          <SelectItem value="Hub Inbound">Hub Inbound</SelectItem>
-                                          <SelectItem value="Arrive At Softing Hub">Arrive At Softing Hub</SelectItem>
-                                          <SelectItem value="In Route">In Route</SelectItem>
-                                          <SelectItem value="Delivered">Delivered</SelectItem>
-                                          <SelectItem value="Return To Sender">Return To Sender</SelectItem>
-                                          <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                  </div>
-                                  {statusError && <div className="text-red-600 mb-4 text-sm">{statusError}</div>}
-                                  <textarea
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-400 hover:bg-blue-50"
-                                    rows={3}
-                                    placeholder="Changed Reason"
-                                    value={changeReason}
-                                    onChange={e => setChangeReason(e.target.value)}
-                                    disabled={statusLoading}
-                                  />
-                                  <div className="flex gap-3 justify-end">
-                                    <Button
-                                      disabled={statusLoading || !newStatus}                                    >
-                                      {statusLoading ? "Updating..." : "Update"}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowModal(false)}
-                                      disabled={statusLoading}
-                                      className="px-6 py-2 font-semibold rounded-lg border-gray-300"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                   </div>
+                  <div className="w-full">
                     <div className="mb-4 flex gap-2">
                       <input
                         type="text"
@@ -275,17 +201,33 @@ const [, setFetchedOrders] = useState<
                       Add
                     </Button>
                     </div>
-                  <div className="grid grid-cols-2 space-between">
+                  <div className="grid space-between w-full md:grid-cols-2 gap-6">
                   {/* Tracking History / Timeline */}    
                   <div className="mt-8">
                     <div className="text-sm font-medium mb-4">Route History</div>
                       <ScrollArea className="h-auto border-l p-4">
                         <ul className="space-y-4">
+                          {route.log && route.log.length > 0 ? (
+                            route.log.map((entry: any, idx: number) => (
+                              <li key={idx} className="mb-1 text-xs text-gray-700">
+                                <span className="font-bold">{entry.status}</span>
+                                {entry.message && <>: {entry.message}</>}
+                                {entry.timestamp && (
+                                  <span className="ml-2 text-gray-400">{new Date(entry.timestamp).toLocaleString()}</span>
+                                )}
+                                {entry.createdBy && (
+                                  <span className="ml-2 text-gray-400">by {entry.createdBy}</span>
+                                )}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-sm text-gray-500">No route history yet</li>
+                          )}
                         </ul>
                       </ScrollArea>
-                    </div>
+                  </div>
                   <div className="mt-8">
-                    <div className="text-sm font-medium mb-4">Total Order</div>
+                    <div className="text-sm font-medium mb-4">Total Order </div>
                       <ScrollArea className="h-64 border-l p-4">
                         <ul className="space-y-4">
                           {route.orders && route.orders.length > 0 ? (
@@ -296,6 +238,7 @@ const [, setFetchedOrders] = useState<
                                   <div className="font-semibold text-gray-800">{order.CustomerName}</div>
                                   <div className="text-sm text-gray-500">Tracking ID: {order.TrackingId}</div>
                                   <div className="text-sm text-gray-500">Amount: {order.Amount}</div>
+                                  <div className="text-sm text-gray-500">Status: {order.Status}</div>
                                 </div>
                               </li>
                             ))
@@ -307,6 +250,7 @@ const [, setFetchedOrders] = useState<
                     </div>         
                     </div>               
                   </div>
+                </div>
               </div>
             </div>
           </div>

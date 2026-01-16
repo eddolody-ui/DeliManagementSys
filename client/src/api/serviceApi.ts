@@ -162,6 +162,10 @@ export interface RouteData {
   DateCreated?: Date;
   orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[];
   totalAmount?: number;
+  log?: {
+    status: string;
+    message?: string;
+  }[];
 }
 export const createRoute = async (RouteData: RouteData) => {
   const res = await api.post("api/routes", RouteData);

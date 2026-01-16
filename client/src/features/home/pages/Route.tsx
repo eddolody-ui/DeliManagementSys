@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { createRoute, getRoutes, type RouteData } from "@/api/serviceApi"
 import { useNavigate } from "react-router-dom"
 
-
 export function RoutePage() {
   const [showModal, setShowModal] = useState(false);
   const [newHub, setNewHub] = useState("");  
@@ -75,18 +74,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             <div className="flex items-center mb-6 justify-between w-170">
             </div>
                  <div className="flex">
-                        <div className="">
-                            <Select >
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Hub" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="SH-TWN-001">SH-TWN-001</SelectItem>
-                                    <SelectItem value="SH-TWN-002">SH-TWN-002</SelectItem>
-                                    <SelectItem value="SH-TWN-003">SH-TWN-003</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
                     <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" 
                     onClick={openStatusModal}>Create Route</Button>
                             {/* Status Update Modal */}
