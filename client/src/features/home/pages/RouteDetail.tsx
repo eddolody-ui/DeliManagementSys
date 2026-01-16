@@ -30,10 +30,9 @@ export function RouteDetail() {
 const [inputTrackingId, setInputTrackingId] = useState("");
 
 // Orders fetched based on input
-const [fetchedOrders, setFetchedOrders] = useState<
+const [, setFetchedOrders] = useState<
   (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
 >([]);
-const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 0), 0);
 
   // Update newStatus when modal opens
   const openStatusModal = () => {
@@ -161,7 +160,7 @@ const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 
                   </div>
                   <div className="mb-6">
                     <div className="text-ms text-gray-400 ">Amount</div>
-                    <div className="mt-1 text-sm text-gray-700">{totalAmount} MMK</div>
+                    <div className="mt-1 text-sm text-gray-700">{route.totalAmount || 0} MMK</div>
                   </div>
                   <div className="mb-6">
                     <div className="text-ms text-gray-400 ">Delivery Address</div>
@@ -244,39 +243,38 @@ const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 
                               </div>
                             )}
                   </div>
-<div className="mb-4 flex gap-2">
-  <input
-    type="text"
-    placeholder="Enter Tracking ID"
-    value={inputTrackingId}
-    onChange={(e) => setInputTrackingId(e.target.value)}
-    className="border rounded px-4 py-2 flex-1"
-  />
+                    <div className="mb-4 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter Tracking ID"
+                        value={inputTrackingId}
+                        onChange={(e) => setInputTrackingId(e.target.value)}
+                        className="border rounded px-4 py-2 flex-1"
+                      />
+                    <Button
+                      onClick={async () => {
+                        if (!inputTrackingId) return;
+                        if (!RouteId) {
+                          alert("Route ID missing");
+                          return;
+                        }
 
-<Button
-  onClick={async () => {
-    if (!inputTrackingId) return;
-    if (!RouteId) {
-      alert("Route ID missing");
-      return;
-    }
+                        try {
+                          await addOrderToRoute(RouteId, inputTrackingId);
 
-    try {
-      await addOrderToRoute(RouteId, inputTrackingId);
+                          const order = await getOrder(inputTrackingId);
+                          setFetchedOrders((prev) => [order, ...prev]);
 
-      const order = await getOrder(inputTrackingId);
-      setFetchedOrders((prev) => [order, ...prev]);
-
-      setInputTrackingId("");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add order");
-    }
-  }}
->
-  Add
-</Button>
-</div>
+                          setInputTrackingId("");
+                        } catch (err) {
+                          console.error(err);
+                          alert("Failed to add order");
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
+                    </div>
                   <div className="grid grid-cols-2 space-between">
                   {/* Tracking History / Timeline */}    
                   <div className="mt-8">
@@ -290,8 +288,8 @@ const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 
                     <div className="text-sm font-medium mb-4">Total Order</div>
                       <ScrollArea className="h-64 border-l p-4">
                         <ul className="space-y-4">
-                          {fetchedOrders.length > 0 ? (
-                            fetchedOrders.map((order) => (
+                          {route.orders && route.orders.length > 0 ? (
+                            route.orders.map((order: any) => (
                               <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)}
                               className="p-2 border-l flex justify-between items-center">
                                 <div>
@@ -302,7 +300,7 @@ const totalAmount = fetchedOrders.reduce((sum, order) => sum + (order.Amount || 
                               </li>
                             ))
                           ) : (
-                            <li className="text-sm text-gray-500">No orders added yet</li>
+                            <li className="text-sm text-gray-500">No orders in this route</li>
                           )}
                         </ul>
                       </ScrollArea>

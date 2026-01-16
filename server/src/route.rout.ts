@@ -14,23 +14,37 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:routeId/add-order", async (req, res) => {
+router.put("/:routeId", async (req, res) => {
   try {
     const { trackingId } = req.body;
-
+    console.log("BODY:", req.body); 
+    console.log("PARAM:", req.params.routeId);
     const order = await Order.findOne({ TrackingId: trackingId });
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    const route = await DeliRoute.findOne({ RouteId: req.params.routeId });
+
+    // Try to find route by RouteId or _id
+    let route = await DeliRoute.findOne({ RouteId: req.params.routeId });
+    if (!route && mongoose.Types.ObjectId.isValid(req.params.routeId)) {
+      route = await DeliRoute.findById(req.params.routeId);
+    }
     if (!route) {
       return res.status(404).json({ message: "Route not found" });
     }
 
-    // prevent duplicate
-    if (route.orders.includes(order._id)) {
-      return res.status(400).json({ message: "Order already in route" });
+    // Ensure orders is an array of ObjectIds
+    const orderIdStr = order._id.toString();
+    const routeOrderIds = Array.isArray(route.orders)
+      ? route.orders.map((oid: any) => oid.toString())
+      : [];
+    if (routeOrderIds.includes(orderIdStr)) {
+      // If already present, update totalAmount only (or skip)
+      return res.json({
+        message: "Order already in route, no changes made",
+        route,
+      });
     }
 
     route.orders.push(order._id);
@@ -59,19 +73,19 @@ router.get("/", async (req, res) => {
 });
 
 // Get route by _id or RouteId
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: import("express").Request, res: import("express").Response) => {
   try {
-    const { id } = req.params;
+    const id: string = req.params.id;
 
     // Try to find by MongoDB ObjectId (_id)
     let route = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
-      route = await DeliRoute.findById(id);
+      route = await DeliRoute.findById(id).populate("orders");
     }
 
     // If not found by _id, try to find by RouteId (custom string)
     if (!route) {
-      route = await DeliRoute.findOne({ RouteId: id });
+      route = await DeliRoute.findOne({ RouteId: id }).populate("orders");
     }
 
     if (!route) {
