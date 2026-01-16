@@ -178,45 +178,41 @@ export const RouteColumns: ColumnDef<DeliRoute>[] = [
     },
   },
   {
-    accessorKey: "Process",
+    id: "OrderCount",
     header: () => <div className="flex justify-center">Process</div>,
     cell: ({ row }) => {
-      return <div className="capitalize flex justify-center">{row.getValue("Process")}</div>
-    },
-  },
-  {
-    accessorKey: "TotalPercel",
-    header: () => <div className="flex justify-center">Total Parcel</div>,
-    cell: ({ row }) => {
-      // Try to read success/fail counts if available on the route object
-      const total = Number(row.getValue("TotalPercel") || 0)
-      const orig: any = row.original as any
-      const success = Number(orig.SuccessfulPercel ?? orig.success ?? orig.Success ?? total)
-      const fail = Number(orig.FailedPercel ?? orig.fail ?? orig.Failed ?? Math.max(0, total - success))
-
-      const safeTotal = Math.max(0, total || success + fail)
-
-      const pctSuccess = safeTotal > 0 ? Math.round((success / safeTotal) * 100) : 0
-      const pctFail = safeTotal > 0 ? Math.round((fail / safeTotal) * 100) : 0
-
+      // Show the number of orders in the route.orders array, with a progress bar for delivered/failed
+      const orig: any = row.original as any;
+      const orders = Array.isArray(orig.orders) ? orig.orders : [];
+      const orderCount = orders.length;
+      let delivered = 0;
+      let failed = 0;
+      for (const o of orders) {
+        if (o && (o.Status === "Delivered")) delivered++;
+        if (o && (o.Status === "Failed" || o.Status === "fail")) failed++;
+      }
+      const safeTotal = orderCount;
+      const pctDelivered = safeTotal > 0 ? Math.round((delivered / safeTotal) * 100) : 0;
+      const pctFailed = safeTotal > 0 ? Math.round((failed / safeTotal) * 100) : 0;
       return (
         <div className="flex flex-col items-center">
-          <div className="w-40 h-4 bg-gray-200 rounded overflow-hidden flex">
+          <div className="w-25 h-2.5 bg-gray-200 rounded overflow-hidden flex">
             <div
               className="h-full bg-emerald-500"
-              style={{ width: `${pctSuccess}%` }}
-              title={`Success: ${success}`}
+              style={{ width: `${pctDelivered}%` }}
+              title={`Delivered: ${delivered}`}
             />
             <div
               className="h-full bg-rose-500"
-              style={{ width: `${pctFail}%` }}
-              title={`Fail: ${fail}`}
+              style={{ width: `${pctFailed}%` }}
+              title={`Failed: ${failed}`}
             />
           </div>
-          <div className="text-xs text-gray-600 mt-1">{success} / {safeTotal} ({pctSuccess}% success)</div>
+          <div className="text-xs text-gray-600 mt-1">{orderCount} orders &mdash; {delivered} delivered, {failed} failed</div>
         </div>
-      )
+      );
     },
+    enableSorting: false,
   },
   {
     accessorKey: "createdAt",

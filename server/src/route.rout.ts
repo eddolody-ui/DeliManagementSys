@@ -58,10 +58,21 @@ router.put("/:routeId", async (req, res) => {
       timestamp: new Date(),
     });
 
+    // Update order status and log
+    order.Status = "In Route";
+    if (!Array.isArray(order.log)) order.log = [];
+    order.log.push({
+      status: "In Route",
+      message: `Order added to route ${route.RouteId}`,
+      timestamp: new Date(),
+      createdBy: req.body.createdBy || "system"
+    });
+    await order.save();
+
     await route.save();
 
     res.json({
-      message: "Order added to route",
+      message: "Order added to route and status updated to In Route",
       route,
     });
   } catch (err) {
@@ -73,7 +84,8 @@ router.put("/:routeId", async (req, res) => {
 // Get all routes
 router.get("/", async (req, res) => {
   try {
-    const routes = await DeliRoute.find({});
+    // Populate orders so frontend can see order statuses for progress bar
+    const routes = await DeliRoute.find({}).populate("orders");
     res.json(routes);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch routes", error });

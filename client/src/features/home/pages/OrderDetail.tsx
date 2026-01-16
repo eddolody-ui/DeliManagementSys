@@ -30,10 +30,11 @@ export function OrderDetail() {
   const [changeReason, setChangeReason] = useState("");
 
   const isCancelled = order?.Status === "Cancelled";
+  const isDelivered = order?.Status === "Delivered";
+  const isFailed = order?.Status === "Failed" || order?.Status === "fail";
+  const isReadOnly = isDelivered || isFailed;
   const statusBgColor =
-    order?.Status === "Cancelled"
-      ? "bg-white-100"
-      : order?.Status === "Delivered"
+    isCancelled || isDelivered || isFailed
       ? "bg-white-100"
       : "bg-white";
 
@@ -198,7 +199,7 @@ export function OrderDetail() {
                 <div className="col-span-12 md:col-span-6 px-8 py-8 space-y-6">
                   <div className="flex justify-between items-center">
                     <div className="font-semibold text-gray-800">Tracking ID #{order.TrackingId}</div>
-                    <Button variant="ghost" onClick={openStatusModal} disabled={isCancelled} className="border-r border-b  ">
+                    <Button variant="ghost" onClick={openStatusModal} disabled={isReadOnly || isCancelled} className="border-r border-b  ">
                       Edits
                     </Button>
                   </div>
@@ -210,16 +211,27 @@ export function OrderDetail() {
                     </div>
                   )}
 
-                  <div className="mt-6">
-                    <div className="text-sm text-gray-400">Your order is</div>
-                    <div className="mt-2 text-4xl font-extrabold text-gray-900">{order.Status || "Unknown"}</div>
-                    <div className="mt-2 text-sm text-gray-500">
-                      {order.Status === "Delivered" && order.updatedAt ? `as on ${new Date(order.updatedAt).toLocaleDateString()}` : ""}
+                    <div className="mt-6">
+                      <div className="text-sm text-gray-400">Your order is</div>
+                      <div
+                        className={
+                          `mt-2 text-4xl font-extrabold ` +
+                          (order.Status === "Delivered"
+                            ? "text-green-600"
+                            : order.Status === "Failed" || order.Status === "fail"
+                            ? "text-red-600"
+                            : "text-gray-900")
+                        }
+                      >
+                        {order.Status || "Unknown"}
+                      </div>
+                      <div className="mt-2 text-sm text-gray-500">
+                        {order.Status === "Delivered" && order.updatedAt ? `as on ${new Date(order.updatedAt).toLocaleDateString()}` : ""}
+                      </div>
+                      <div className="mt-2 text-xs text-gray-400">
+                        Last updated on {order.updatedAt ? new Date(order.updatedAt).toLocaleDateString() : "—"}
+                      </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-400">
-                      Last updated on {order.updatedAt ? new Date(order.updatedAt).toLocaleDateString() : "—"}
-                    </div>
-                  </div>
 
                   {/* Tracking History */}
                   <div>
@@ -256,7 +268,7 @@ export function OrderDetail() {
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
                   onClick={() => setShowModal(false)}
                   aria-label="Close"
-                  disabled={statusLoading || isCancelled}
+                  disabled={statusLoading || isReadOnly || isCancelled}
                 >
                   ×
                 </button>
@@ -268,7 +280,7 @@ export function OrderDetail() {
                   <Select
                     value={newStatus}
                     onValueChange={(value) => setNewStatus(value)}
-                    disabled={statusLoading || isCancelled}
+                    disabled={statusLoading || isReadOnly || isCancelled}
                   >
                     <SelectTrigger className="w-full min-h-[44px] text-gray-800 font-semibold shadow-sm">
                       <SelectValue placeholder="Select status" />
@@ -291,10 +303,10 @@ export function OrderDetail() {
                   placeholder="Changed Reason"
                   value={changeReason}
                   onChange={(e) => setChangeReason(e.target.value)}
-                  disabled={statusLoading}
+                  disabled={statusLoading || isReadOnly}
                 />
                 <div className="flex gap-3 justify-end">
-                  <Button onClick={handleStatusUpdate} disabled={statusLoading || !newStatus}>
+                  <Button onClick={handleStatusUpdate} disabled={statusLoading || !newStatus || isReadOnly}>
                     {statusLoading ? "Updating..." : "Update"}
                   </Button>
                   <Button

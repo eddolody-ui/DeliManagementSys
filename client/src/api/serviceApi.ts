@@ -5,13 +5,13 @@
  * - Called from OrderDetail page when status is changed
  * - PATCH /api/orders/:trackingId/status endpoint
  */
-export const updateOrderStatus = async ( // * Updates the status of an order and appends a log entry.
+export const updateOrderStatus = async (
   trackingId: string,
   status: string,
   message?: string,
   createdBy?: string
 ) => {
-  const res = await api.patch(`/orders/${trackingId}/status`, {
+  const res = await api.patch(`/api/orders/${trackingId}/status`, {
     status,
     message,
     createdBy,
