@@ -144,10 +144,33 @@ const saveShipper = (shipperData) => __awaiter(void 0, void 0, void 0, function*
 exports.saveShipper = saveShipper;
 //section for DeliRoute schema and model
 const RouteSchema = new mongoose_1.default.Schema({
-    RouteId: { type: String, required: true },
+    RouteId: {
+        type: String,
+        default: function () {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        },
+    },
     Hub: { type: String, required: true },
     AssignPersonName: { type: String, required: true },
     DateCreated: { type: Date, default: Date.now },
+    // 🔥 FIX HERE
+    orders: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "Order",
+            default: [],
+        },
+    ],
+    totalAmount: { type: Number, default: 0 },
+    // Route process log
+    log: [
+        {
+            status: { type: String },
+            message: { type: String },
+            timestamp: { type: Date, default: Date.now },
+            createdBy: { type: String },
+        }
+    ],
 }, { timestamps: true });
 const DeliRoute = mongoose_1.default.models.DeliRoute || mongoose_1.default.model("DeliRoute", RouteSchema);
 exports.DeliRoute = DeliRoute;
