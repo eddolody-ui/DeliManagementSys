@@ -10,6 +10,7 @@ import { ENV_VARS } from "./config/envVars";
 import orderRoutes from "./order.rout";
 import shipperRoutes from "./shipper.rout";
 import routeRoutes from "./route.rout";
+import shipmentRoutes from "./shipment.route";
 
 export const app = express();
 
@@ -36,7 +37,6 @@ app
           "http://localhost:5173",
           "http://localhost:5174",
           "http://localhost:5175",
-          "https://retailshop-k8s1.onrender.com",
         ];
         if (!origin) return callback(null, true);
         if (whiteList.includes(origin)) {
@@ -56,6 +56,8 @@ app
 app.use("/api/orders", orderRoutes);
 app.use("/api/shippers", shipperRoutes);
 app.use("/api/routes", routeRoutes);
+app.use("/api/shipments", shipmentRoutes);
+
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" })
@@ -78,3 +80,6 @@ app.use(
 
 // ===== Optional: custom error handler =====
 // app.use(errorHandler);
+app.post("/api/test", (req, res) => {
+  res.json({ test: "ok" });
+});

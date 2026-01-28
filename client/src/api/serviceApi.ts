@@ -184,3 +184,32 @@ export const getRoute = async (id: string): Promise<RouteData & { _id: string; o
 };
 
 //..........................................................................................................//
+
+export interface ShipmentData {
+  ShipmentId?: string;
+  FromHub: string;
+  ToHub: string,
+  DateCreated?: Date;
+  orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[];
+  log?: {
+    status: string;
+    message?: string;
+  }[];
+}
+export const createShipment = async (ShipmentData: ShipmentData) => {
+  const res = await api.post("api/shipments", ShipmentData);
+  return res.data;
+}
+
+export const getShipments = async (): Promise<ShipmentData[]> => {
+  const res = await api.get("api/shipments");
+  return res.data;
+};
+
+export const getShipment = async (id: string): Promise<ShipmentData & { _id: string; orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[] }> => {
+  const res = await api.get(`api/shipments/${id}`);
+  console.log("API response:", res.data);
+  return res.data;
+};
+
+//..........................................................................................................//
