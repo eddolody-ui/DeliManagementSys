@@ -148,18 +148,6 @@ const [, setFetchedOrders] = useState<
                     <div className="text-ms text-gray-400 ">Amount</div>
                     <div className="mt-1 text-sm text-gray-700">{route.totalAmount || 0} MMK</div>
                   </div>
-                  <div className="mb-6">
-                    <div className="text-ms text-gray-400 ">Delivery Address</div>
-                    <div className="mt-1 text-sm text-gray-700">{'—'}</div>
-                  </div>
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="text-ms text-gray-400 ">Shipper</div>
-                    <div className="mt-1 text-sm">{'N/A'}</div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="text-ms text-gray-400 ">Shipper Contact</div>
-                    <div className="text-sm">{'—'}</div>
-                  </div>
                 </div>
                 {/* Middle column: tracking & status (6/12) */}
                 <div className="col-span-12 md:col-span-6 px-8 py-8">
@@ -177,7 +165,9 @@ const [, setFetchedOrders] = useState<
                         onChange={(e) => setInputTrackingId(e.target.value)}
                         className="border rounded px-4 py-2 flex-1"
                       />
-                    <Button
+                    <Button className="h-10 rounded border-b ml-auto 
+                    transform motion-safe:hover:scale-110 transition-transform bg-gray-400
+                     hover:bg-gray-700"
                       onClick={async () => {
                         if (!inputTrackingId) return;
                         if (!RouteId) {

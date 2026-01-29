@@ -36,6 +36,8 @@ export function CreateOrderForm() {
     CustomerName: "",
     CustomerContact: "",
     CustomerAddress: "",
+    TownShip: "",
+    DeliFee:"",
     Amount: 0,
     Type: "COD",
     Note: "",
@@ -168,6 +170,34 @@ export function CreateOrderForm() {
                   value={formData.CustomerAddress}
                   onChange={handleChange}
                   placeholder="Enter full address"
+                  className="rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Town ship
+                </label>
+                <Input
+                  name="Tsp"
+                  value={formData.Amount}
+                  onChange={handleChange}
+                  placeholder="Enter Amount"
+                  className="rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Amount
+                </label>
+                <Input
+                  name="Amount"
+                  type="number"
+                  min={0}
+                  value={formData.Amount}
+                  onChange={handleChange}
+                  placeholder="Enter Amount"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />

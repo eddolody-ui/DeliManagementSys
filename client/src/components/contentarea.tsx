@@ -18,6 +18,7 @@ import { Users, Lock } from "lucide-react"
 import { IoCarSport } from "react-icons/io5";
 import { MdOutlineRoute } from "react-icons/md";
 import { IoIosContacts } from "react-icons/io";
+import { AiOutlineTruck } from "react-icons/ai";
 //Sidebar import //
 import {
   Sidebar,
@@ -69,10 +70,17 @@ const items: MenuItem[] = [
      { title: "CreateShipper", url: "/Shipper/CreateShipper", icon: Lock },
    ],
  },
+
  { title: "Route",
    url: "/Route",
   icon: MdOutlineRoute,
  },
+
+  { title: "Shipment",
+   url: "/Shipment",
+  icon: AiOutlineTruck,
+ },
+
 ]
 
 //Section-For-Sidebar//
@@ -386,7 +394,6 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
     </div>
   )
 }
-
 
 //Section-For-DataTable//
 import * as React from "react"
