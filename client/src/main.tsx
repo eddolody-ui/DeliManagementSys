@@ -14,6 +14,7 @@
   import { RouteDetail } from "./features/home/pages/RouteDetail.tsx";
   import { ShipmentPage } from "./features/home/pages/Shipment.tsx";
   import { ShipmentDetail } from "./features/home/pages/ShipmentDetail.tsx";
+  import { Finace } from "./features/home/pages/Finical.tsx";
 
 
   const router =createBrowserRouter ([
@@ -29,6 +30,8 @@
     {path:"/Route/:RouteId", element:<RouteDetail />},
     {path:"/Shipment", element:<ShipmentPage />},
     {path:"/Shipment/:ShipmentId", element:<ShipmentDetail />},
+    {path:"/Finance/Shipper", element:<Finace />},
+    
   ])
   
   createRoot(document.getElementById("root")!).render(

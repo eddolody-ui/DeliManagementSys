@@ -86,7 +86,7 @@ const [, setFetchedOrders] = useState<
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-red-600 mb-4 text-lg">{error}</div>
-                <Link to="/Route">
+                <Link to="/Shipment">
                   <Button variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Shipment

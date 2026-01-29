@@ -133,7 +133,6 @@ export function ShipperDetail() {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <SidebarInset className="flex flex-col w-full">
-            {/* Back Button */}
             <div className="pl-2 pr-4 mt-3 flex justify-between items-center">
               <Link to="/Shipper">
               </Link>

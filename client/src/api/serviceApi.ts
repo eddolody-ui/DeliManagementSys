@@ -80,7 +80,7 @@ export interface OrderData {
   Type: string;
   Note: string;
   shipperId?: string | ShipperData;
-  Status: string | 'Pending' | 'In Transit' | 'Delivered' | 'Cancelled';
+  Status: string | 'Pending' | 'In Transit' | 'Delivered' | 'Cancelled'| 'RTS';
   log?: {
     status: string;
     timestamp: string;

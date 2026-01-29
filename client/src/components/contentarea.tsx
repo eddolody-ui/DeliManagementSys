@@ -19,6 +19,7 @@ import { IoCarSport } from "react-icons/io5";
 import { MdOutlineRoute } from "react-icons/md";
 import { IoIosContacts } from "react-icons/io";
 import { AiOutlineTruck } from "react-icons/ai";
+import { SiCashapp } from "react-icons/si";
 //Sidebar import //
 import {
   Sidebar,
@@ -79,6 +80,11 @@ const items: MenuItem[] = [
    url: "/Shipment",
   icon: AiOutlineTruck,
  },
+  { title: "Finance",
+   url: "/Finance/Shipper",
+  icon: SiCashapp,
+ },
+
 
 ]
 
@@ -328,6 +334,8 @@ export default function Dashboard() {
 export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [DeliveredCount, setDeliveredCount] = useState<number>(0);
+  const [RtsCount, setRtscount] = useState<number>(0);
 
   useEffect(() => {
     const fetchOrderStats = async () => {
@@ -351,6 +359,11 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
         setTotalOrders(filteredOrders.length);
         const pendingOrders = filteredOrders.filter(order => order.Status === 'Pending');
         setPendingCount(pendingOrders.length);
+        const DeliveredOrders = filteredOrders.filter(order => order.Status === 'Delivered');
+        setDeliveredCount(DeliveredOrders.length);        
+        const RtsOrders = filteredOrders.filter(order => order.Status === 'RTS');
+        setRtscount(RtsOrders.length);
+        
       } catch (error) {
         console.error("Failed to fetch order stats:", error);
         // Set default values if API fails
@@ -377,17 +390,13 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
 
     <StatusCard
         title="Customers"
-        value={320}
-        trend="down"
-        trendValue="3% this week"
+        value={DeliveredCount}
         icon={<Users className="h-5 w-5" />}
         />
 
     <StatusCard
-        title="Shipment"
-        value={628}
-        trend="up"
-        trendValue="70% this month"
+        title="RTS"
+        value={RtsCount}
         icon={<IoCarSport className="h-5 w-5" />}
         />
     </div>
