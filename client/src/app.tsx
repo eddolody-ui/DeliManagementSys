@@ -11,6 +11,8 @@ import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { Toaster } from "sonner";
 import { RoutePage } from "./features/home/pages/Route";
+import { ShipmentPage } from "./features/home/pages/Shipment";
+import {ShipmentDetail} from "./features/home/pages/ShipmentDetail";
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error?: Error}> {
   constructor(props: {children: ReactNode}) {
@@ -86,6 +88,8 @@ function App() {
           <Route path="/Shipper/:shipperId/CreateOrder" element={<CreateOrderForm />}/>
           <Route path="/Route" element={<RoutePage />} />
           <Route path="/Route/:RouteId" element={<RouteDetail />} />
+          <Route path="/Shipment" element={<ShipmentPage />} />
+          <Route path="/Shipment/:ShipmentId" element={<ShipmentDetail />} />         
         </Routes>
         <Toaster richColors /> 
       </BrowserRouter>

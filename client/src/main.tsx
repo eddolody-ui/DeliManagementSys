@@ -12,6 +12,8 @@
   import { ShipperDetail } from "./features/home/pages/ShipperDetail.tsx";
   import { RoutePage } from "./features/home/pages/Route.tsx";
   import { RouteDetail } from "./features/home/pages/RouteDetail.tsx";
+  import { ShipmentPage } from "./features/home/pages/Shipment.tsx";
+  import { ShipmentDetail } from "./features/home/pages/ShipmentDetail.tsx";
 
 
   const router =createBrowserRouter ([
@@ -25,6 +27,8 @@
     {path:"/Shipper/:shipperId/CreateOrder", element:<CreateOrderForm />},
     {path:"/Route", element:<RoutePage />},
     {path:"/Route/:RouteId", element:<RouteDetail />},
+    {path:"/Shipment", element:<ShipmentPage />},
+    {path:"/ShipmentDetail/:ShipmentId", element:<ShipmentDetail />},
   ])
   
   createRoot(document.getElementById("root")!).render(

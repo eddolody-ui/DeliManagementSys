@@ -148,8 +148,6 @@ const RouteSchema = new mongoose.Schema(
     Hub: { type: String, required: true },
     AssignPersonName: { type: String, required: true },
     DateCreated: { type: Date, default: Date.now },
-
-    // 🔥 FIX HERE
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -188,3 +186,51 @@ const saveDeliRoute = async (routeData: any) => {
 };
 
 export { DeliRoute, saveDeliRoute };
+
+const ShipmentSchema = new mongoose.Schema(
+  {
+    ShipmentId: {
+      type: String,
+      default: function () {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+      },
+    },
+    FromHub: { type: String, required: true },
+    ToHub: {type: String, required: true},
+    DateCreated: { type: Date, default: Date.now },
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
+        default: [],
+      },
+    ],
+    // Shipment process log
+    log: [
+      {
+        status: { type: String },
+        message: { type: String },
+        timestamp: { type: Date, default: Date.now },
+        createdBy: { type: String },
+      }
+    ],
+  },
+  { timestamps: true }
+);
+
+const Shipment =
+  mongoose.models.Shipment || mongoose.model("Shipment", ShipmentSchema);
+
+const saveShipment = async (ShipmentData: any) => {
+  try {
+
+    const shipment = new Shipment(ShipmentData); 
+    return await shipment.save();
+  } catch (error) {
+    console.error("❌ Shipment save error:", error);
+    throw error;
+  } 
+};
+
+export { Shipment, saveShipment };
+

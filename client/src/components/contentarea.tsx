@@ -75,7 +75,6 @@ const items: MenuItem[] = [
    url: "/Route",
   icon: MdOutlineRoute,
  },
-
   { title: "Shipment",
    url: "/Shipment",
   icon: AiOutlineTruck,
