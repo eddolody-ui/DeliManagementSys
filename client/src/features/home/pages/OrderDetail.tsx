@@ -288,6 +288,7 @@ export function OrderDetail() {
                     <SelectContent>
                       <SelectItem value="Pending">Pending</SelectItem>
                       <SelectItem value="Hub Inbound">Hub Inbound</SelectItem>
+                      <SelectItem value="Add To Shipment">Add To Shipment</SelectItem>
                       <SelectItem value="Arrive At Softing Hub">Arrive At Softing Hub</SelectItem>
                       <SelectItem value="In Route">In Route</SelectItem>
                       <SelectItem value="Delivered">Delivered</SelectItem>

@@ -4,17 +4,16 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { getRoute, type RouteData } from "@/api/serviceApi"
+import { addOrderToShipment, getShipment, type ShipmentData } from "@/api/serviceApi"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type{ OrderData } from "@/api/serviceApi"
 import { getOrder } from "@/api/serviceApi"
 import { useNavigate } from "react-router-dom";
-import { addOrderToRoute } from "@/api/serviceApi";
 
 export function ShipmentDetail() {
   const navigate = useNavigate();
-  const {RouteId } = useParams<{ RouteId: string }>()
-  const [route, setRoute] = useState<(RouteData & { _id: string }) | null>(null)
+  const {ShipmentId } = useParams<{ ShipmentId: string }>()
+  const [shipment, setshipment] = useState<(ShipmentData & { _id: string }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,38 +26,38 @@ const [, setFetchedOrders] = useState<
 >([])
 
   useEffect(() => {
-    const fetchRoute = async () => {
-      if (!RouteId) {
-        setError("No Route ID provided")
+    const fetchShipment = async () => {
+      if (!ShipmentId) {
+        setError("No Shipment ID provided")
         setLoading(false)
         return
       }
 
       try {
         // Fetch route by RouteId (RouteId may be custom string or Mongo _id)
-        const routeData = await getRoute(RouteId)
-        console.log("Fetched route data:", routeData)
-        setRoute(routeData);
+        const shipmentData = await getShipment(ShipmentId)
+        console.log("Fetched route data:", shipmentData)
+        setshipment(shipmentData);
 
         // Handle shipper data - either populated object or string reference
       } catch (err: any) {
-        console.error("Error fetching order:", err)
+        console.error("Error fetching Shipment:", err)
         if (err.response?.status === 404) {
-          setError("Route not found")
+          setError("Shipment not found")
         } else if (err.response?.status >= 500) {
           setError("Server error. Please try again later.")
         } else if (err.code === 'NETWORK_ERROR' || !err.response) {
           setError("Network error. Please check your connection.")
         } else {
-          setError("Failed to load order details")
+          setError("Failed to load Shipment details")
         }
       } finally {
         setLoading(false)
       }
     }
 
-    fetchRoute()
-  }, [RouteId])
+    fetchShipment()
+  }, [ShipmentId])
 
   if (loading) {
     return (
@@ -69,7 +68,7 @@ const [, setFetchedOrders] = useState<
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading Route details...</p>
+                <p className="mt-4 text-gray-600">Loading Shipment details...</p>
               </div>
             </div>
           </SidebarInset>
@@ -90,7 +89,7 @@ const [, setFetchedOrders] = useState<
                 <Link to="/Route">
                   <Button variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Routes
+                    Back to Shipment
                   </Button>
                 </Link>
               </div>
@@ -101,7 +100,7 @@ const [, setFetchedOrders] = useState<
     )
   }
 
-  if (!route) {
+  if (!shipment) {
     return (
       <SidebarProvider>
         <div className="flex min-h-screen w-full">
@@ -109,11 +108,11 @@ const [, setFetchedOrders] = useState<
           <SidebarInset className="flex flex-col w-full">
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-gray-600 mb-4">Route not found</p>
+                <p className="text-gray-600 mb-4">Shipment not found</p>
                 <Link to="/Route">
                   <Button variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Routes
+                    Back to Shipment
                   </Button>
                 </Link>
               </div>
@@ -137,20 +136,16 @@ const [, setFetchedOrders] = useState<
                 {/* Left column: customer & seller info (3/12) */}
                 <div className="col-span-12 md:col-span-3 border-r px-6 py-8">
                   <div className="mb-6">
-                    <div className="text-ms text-gray-400">Name</div>
-                    <div className="mt-1 font-medium ">{route.AssignPersonName}</div>
+                    <div className="text-ms text-gray-400 ">From</div>
+                    <div className="mt-1 text-sm text-black-700">{shipment.FromHub ||'—'}</div>
                   </div>
                   <div className="mb-6">
-                    <div className="text-ms text-gray-400 ">Hub</div>
-                    <div className="mt-1 text-sm text-black-700">{route.Hub ||'—'}</div>
+                    <div className="text-ms text-gray-400 ">To</div>
+                    <div className="mt-1 text-sm text-gray-700">{shipment.ToHub || 0} MMK</div>
                   </div>
                   <div className="mb-6">
-                    <div className="text-ms text-gray-400 ">Amount</div>
-                    <div className="mt-1 text-sm text-gray-700">{route.totalAmount || 0} MMK</div>
-                  </div>
-                  <div className="mb-6">
-                    <div className="text-ms text-gray-400 ">Delivery Address</div>
-                    <div className="mt-1 text-sm text-gray-700">{'—'}</div>
+                    <div className="text-ms text-gray-400 ">Total Order In Shipment</div>
+                    <div className="mt-1 text-sm text-gray-700">{shipment.orders ? shipment.orders.length : 0}</div>
                   </div>
                   <div className="mt-6 pt-6 border-t">
                     <div className="text-ms text-gray-400 ">Shipper</div>
@@ -165,7 +160,7 @@ const [, setFetchedOrders] = useState<
                 <div className="col-span-12 md:col-span-6 px-8 py-8">
                   <div className="flex items-center mb-6 justify-between w-170">
                     <div className="flex">
-                      <div className="font-semibold text-gray-800">RouteID# {route.RouteId}</div>
+                      <div className="font-semibold text-gray-800">Shipment ID# {shipment.ShipmentId}</div>
                     </div>
                   </div>
                   <div className="w-full">
@@ -177,16 +172,18 @@ const [, setFetchedOrders] = useState<
                         onChange={(e) => setInputTrackingId(e.target.value)}
                         className="border rounded px-4 py-2 flex-1"
                       />
-                    <Button
+                    <Button className="h-10 rounded border-b ml-auto 
+                    transform motion-safe:hover:scale-110 transition-transform bg-gray-400
+                     hover:bg-gray-700"
                       onClick={async () => {
                         if (!inputTrackingId) return;
-                        if (!RouteId) {
-                          alert("Route ID missing");
+                        if (!ShipmentId) {
+                          alert("Tracking ID missing");
                           return;
                         }
 
                         try {
-                          await addOrderToRoute(RouteId, inputTrackingId);
+                          await addOrderToShipment(ShipmentId, inputTrackingId);
 
                           const order = await getOrder(inputTrackingId);
                           setFetchedOrders((prev) => [order, ...prev]);
@@ -207,8 +204,8 @@ const [, setFetchedOrders] = useState<
                     <div className="text-sm font-medium mb-4">Route History</div>
                       <ScrollArea className="h-auto border-l p-4">
                         <ul className="space-y-4">
-                          {route.log && route.log.length > 0 ? (
-                            route.log.map((entry: any, idx: number) => (
+                          {shipment.log && shipment.log.length > 0 ? (
+                            shipment.log.map((entry: any, idx: number) => (
                               <li key={idx} className="mb-1 text-xs text-gray-700">
                                 <span className="font-bold">{entry.status}</span>
                                 {entry.message && <>: {entry.message}</>}
@@ -230,8 +227,8 @@ const [, setFetchedOrders] = useState<
                     <div className="text-sm font-medium mb-4">Total Order </div>
                       <ScrollArea className="h-64 border-l p-4">
                         <ul className="space-y-4">
-                          {route.orders && route.orders.length > 0 ? (
-                            route.orders.map((order: any) => (
+                          {shipment.orders && shipment.orders.length > 0 ? (
+                            shipment.orders.map((order: any) => (
                               <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)}
                               className="p-2 border-l flex justify-between items-center">
                                 <div>

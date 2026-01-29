@@ -12,17 +12,20 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { createRoute, getRoutes, type RouteData } from "@/api/serviceApi"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { Input } from "@/components/ui/input"
 
 export function RoutePage() {
   const [showModal, setShowModal] = useState(false);
   const [newHub, setNewHub] = useState("");  
   const [newRider, setNewRider] = useState("");
-  const [statusLoading] = useState(true);
+  const [statusLoading] = useState(false);
   const navigate = useNavigate();
   const [, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [, setRoutes] = useState<RouteData[] | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+
 
   const openStatusModal = () => {
     // generate a stable RouteId for this creation session and show modal
@@ -74,6 +77,16 @@ const handleSubmit = async (e: React.FormEvent) => {
             <div className="flex items-center mb-6 justify-between w-170">
             </div>
                  <div className="flex">
+                    <Input
+                      placeholder="Search by Route ID..."
+                      value={searchParams.get('q') || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchParams(value ? { q: value } : {});
+                      }}
+                      className="max-w-sm"
+                    />
+
                     <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" 
                     onClick={openStatusModal}>Create Route</Button>
                             {/* Status Update Modal */}

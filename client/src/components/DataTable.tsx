@@ -32,13 +32,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getOrders, getRoutes, getShippers, type OrderData, type RouteData, type ShipperData } from "@/api/serviceApi"
+import { getOrders, getRoutes, getShipments, getShippers, type OrderData, type RouteData, type ShipmentData, type ShipperData } from "@/api/serviceApi"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 export type Order = OrderData & { _id: string; createdAt: string; updatedAt: string };
 export type Shipper = ShipperData & { _id: string; createdAt: string; updatedAt: string };
 export type DeliRoute = RouteData & { _id: string; createdAt: string; updatedAt: string };
+export type ShipmentRoute = ShipmentData & { _id: string; createdAt: string, updatedAt: string}
 
 export const shipperColumns: ColumnDef<Shipper>[] = [
   // `shipperColumns` ဆိုတာ Shipper table အတွက် column definitions ဖြစ်တယ်။
@@ -224,6 +225,49 @@ export const RouteColumns: ColumnDef<DeliRoute>[] = [
   },
 
 ]
+export const ShipmentColumns: ColumnDef<ShipmentRoute>[] = [
+  {
+    accessorKey: "ShipmentId",
+    header: () => <div className="flex justify-center">Shipment ID</div>,
+    cell: ({ row }) => {
+      return <div className="capitalize flex justify-center">{row.getValue("ShipmentId")}</div>
+    },
+  },
+  {
+    accessorKey: "FromHub",
+    header: () => <div className="flex justify-center">From</div>,
+    cell: ({ row }) => {
+      return <div className="capitalize flex justify-center">{row.getValue("FromHub")}</div>
+    },
+  },
+
+  {
+    accessorKey: "ToHub",
+    header: () => <div className="flex justify-center">To</div>,
+    cell: ({ row }) => {
+      return <div className="capitalize flex justify-center">{row.getValue("ToHub")}</div>
+    },
+  },
+
+  {
+    id: "TotalOrders",
+    header: () => <div className="flex justify-center">Total Orders</div>,
+    cell: ({ row }) => {
+      const orders = row.original.orders || [];
+      return <div className="flex justify-center">{orders.length}</div>
+    },
+  },
+
+  {
+    accessorKey: "createdAt",
+    header: () => <div className="flex justify-center">Date Created</div>,
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("createdAt")).toLocaleDateString();
+      return <div className="capitalize flex justify-center">{date}</div>
+    },
+  },
+
+]
 
 function TableSkeleton({ columns }: { columns: number }) {
   // TableSkeleton: loading state အတွင်းမှာ ဗလာ placeholder rows/header များကို ပြရန် component
@@ -257,6 +301,161 @@ function TableSkeleton({ columns }: { columns: number }) {
   )
 }
 
+export function ShipmentDataTable({ shipments }: { shipments?: ShipmentRoute[] } = {}) {
+  // RouteDataTable
+  // - API မှ `getOrders()` ကို call ပြီး orders ကိုယူသည်။
+  // - တကယ်ရှိရင် `getShippers()` နဲ့ merge လုပ်၍ shipper info ကို order နှင့် ပေါင်းစပ်ပေးသည်။
+  // - URL query param `q` (search) ကို `useSearchParams` ကနေ ဖတ်ပြီး client-side filter လုပ်ပေးတယ်။
+  // - `useReactTable` ကိုသုံးပြီး sorting/filtering/pagination စတာတွေကို ထိန်းချုပ်ပေးတယ်။
+  // - row click မှာ `useNavigate` နဲ့ order detail page သို့ ပြောင်းပေးတယ်။
+  const navigate = useNavigate()
+  const [data, setData] = React.useState<ShipmentRoute[]>([]);
+  const [allData, setAllData] = React.useState<ShipmentRoute[]>([]);
+  const [loading, setLoading] = React.useState(!shipments);
+  const [sorting, setSorting] = React.useState<SortingState>([{id: "createdAt", desc: (true)},])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = React.useState({})
+
+  React.useEffect(() => {
+    if (shipments) {
+      setData(shipments);
+      setAllData(shipments);
+      setLoading(false);
+      return;
+    }
+
+    const fetchShipments = async () => {
+      try {
+        const fetched = await getShipments();
+        const shipmentArr = (fetched || []) as ShipmentRoute[];
+
+        // No complex merge needed for routes currently; use fetched array directly
+        setData(shipmentArr);
+        setAllData(shipmentArr);
+      } catch (error) {
+        console.error("Failed to fetch Shipments:", error);
+        setData([]);
+        setAllData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShipments();
+  }, []);
+
+  const [searchParams] = useSearchParams();
+  React.useEffect(() => {
+    const q = (searchParams.get('q') || '').trim().toLowerCase()
+    if (!q) {
+      setData(allData)
+      return
+    }
+
+    const filtered = allData.filter((o) => {
+      const tracking = (o.ShipmentId || '').toString().toLowerCase()
+      const orderId = (o._id || '').toString().toLowerCase()
+      const From = (o.FromHub || '').toString().toLowerCase()
+      const To = (o.ToHub || '').toString().toLowerCase()      
+      const identifier = (((o as any).routeIdentifier) || (o.ShipmentId) || (o._id) || '').toString().toLowerCase()
+
+      return (
+        tracking.includes(q) ||
+        orderId.includes(q) ||
+        From.includes(q) ||
+        To.includes(q) ||
+        identifier.includes(q)
+      )
+    })
+
+    setData(filtered)
+  }, [searchParams, allData])
+
+  const table = useReactTable({
+    data,
+    columns: ShipmentColumns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  })    
+
+  if (loading) {
+    return <TableSkeleton columns={RouteColumns.length} />;
+  }
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center py-4"></div>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/Shipment/${row.original.ShipmentId}`);
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={RouteColumns.length}
+                  className="h-24 text-center"
+                >
+                  No route found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
 export function RouteDataTable({ Routes }: { Routes?: DeliRoute[] } = {}) {
   // RouteDataTable
   // - API မှ `getOrders()` ကို call ပြီး orders ကိုယူသည်။
@@ -268,7 +467,7 @@ export function RouteDataTable({ Routes }: { Routes?: DeliRoute[] } = {}) {
   const [data, setData] = React.useState<DeliRoute[]>([]);
   const [allData, setAllData] = React.useState<DeliRoute[]>([]);
   const [loading, setLoading] = React.useState(!Routes);
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([{id: "createdAt", desc: (true)},])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
@@ -419,12 +618,7 @@ export function ShipperDataTable() {
   const [data, setData] = React.useState<Shipper[]>([]);
   const [allData, setAllData] = React.useState<Shipper[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [sorting, setSorting] = React.useState<SortingState>([
-    {
-      id: "ShipperName",
-      desc: false,
-    },
-  ])
+  const [sorting, setSorting] = React.useState<SortingState>([{id: "createdAt", desc: (true)},])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
@@ -583,7 +777,7 @@ export function OrderDataTable({ orders }: { orders?: Order[] }  = {}) {
   const [data, setData] = React.useState<Order[]>([]);
   const [allData, setAllData] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(!orders);
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([{id: "createdAt", desc: (true)},])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})

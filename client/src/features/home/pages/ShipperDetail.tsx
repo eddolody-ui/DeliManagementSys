@@ -136,9 +136,6 @@ export function ShipperDetail() {
             {/* Back Button */}
             <div className="pl-2 pr-4 mt-3 flex justify-between items-center">
               <Link to="/Shipper">
-                <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110 transition-transform">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                </Button>
               </Link>
               <Link to={`/Shipper/${shipperId}/CreateOrder`}>
                 <Button  variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110 transition-transform">

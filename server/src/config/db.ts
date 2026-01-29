@@ -45,7 +45,7 @@ const OrderSchema = new mongoose.Schema(
     Note: { type: String },
     shipperId: { type: mongoose.Schema.Types.Mixed, ref: 'Shipper', required: false },
     Status: { type: String, 
-              enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "In Route", "Delivered", "Return To Sender", "Cancelled"],
+              enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "Add To Shipment", "In Route", "Delivered", "Return To Sender", "Cancelled"],
               default: "Pending" },
     log: [
       {
@@ -227,7 +227,7 @@ const saveShipment = async (ShipmentData: any) => {
     const shipment = new Shipment(ShipmentData); 
     return await shipment.save();
   } catch (error) {
-    console.error("❌ Shipment save error:", error);
+    console.error(" Shipment save error:", error);
     throw error;
   } 
 };

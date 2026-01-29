@@ -41,6 +41,24 @@ export const addOrderToRoute = async (
     }
   }
 };
+
+export const addOrderToShipment = async (
+  ShipmentId: string,
+  trackingId: string
+) => {
+  try {
+    const res = await api.put(`/api/shipments/${ShipmentId}`, { trackingId });
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      // Backend returned an error
+      throw new Error(error.response.data.message || "Failed to add order");
+    } else {
+      throw new Error(error.message || "Network error");
+    }
+  }
+};
+
 /**
  * OrderData Interface
  * 

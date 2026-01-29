@@ -66,8 +66,8 @@ const items: MenuItem[] = [
  { title: "Shipper",
    icon: IoIosContacts,
    children: [
-     { title: "Shipper", url: "/Shipper", icon: Users },
-     { title: "CreateShipper", url: "/Shipper/CreateShipper", icon: Lock },
+     { title: "Shipper List", url: "/Shipper", icon: Users },
+     { title: "Create Shipper", url: "/Shipper/CreateShipper", icon: Lock },
    ],
  },
 

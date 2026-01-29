@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar} from "@/components/contentarea"
-import {RouteDataTable}  from "@/components/DataTable"
+import {ShipmentDataTable}  from "@/components/DataTable"
 import { useState } from "react"
 import {
   Select,
@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/select"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { createShipment, getShipments, type ShipmentData } from "@/api/serviceApi"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 export function ShipmentPage() {
   const [showModal, setShowModal] = useState(false);
@@ -23,7 +24,7 @@ export function ShipmentPage() {
   const [, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [, setShipment] = useState<ShipmentData[] | undefined>(undefined);
-
+  const [searchParams, setSearchParams] = useSearchParams();
   const openStatusModal = () => {
     // generate a stable RouteId for this creation session and show modal
     setShowModal(true);
@@ -67,9 +68,18 @@ const handleSubmit = async (e: React.FormEvent) => {
           <div className="p-4 flex flex-col">
             <div className="flex items-center mb-6 justify-between w-170">
             </div>
-                 <div className="flex">
-                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110" 
-                    onClick={openStatusModal}>Create Route</Button>
+                 <div className="flex gap-2">
+                    <Input
+                      placeholder="Search by Shipment ID..."
+                      value={searchParams.get('q') || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchParams(value ? { q: value } : {});
+                      }}
+                      className="max-w-sm"
+                    />
+                    <Button variant="ghost" className="rounded border-b ml-auto transform motion-safe:hover:scale-110"
+                    onClick={openStatusModal}>Create Shipment</Button>
                             {/* Status Update Modal */}
                             <form onSubmit={handleSubmit}>
                             {showModal && (
@@ -83,7 +93,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                                                   </button>
                                                   <h2 className="text-2xl font-bold mb-6 text-gray-900">Create Shipment</h2>
                                                   <div className="mb-6">
-                                    <label htmlFor="status-Hub" className="block text-sm font-medium text-gray-700 mb-2">From</label>
+                                    <label htmlFor="status-Hub1" className="block text-sm font-medium text-gray-700 mb-2">From</label>
                                     <Select
                                         value={newFromHub}
                                         onValueChange={(value) => setFromHub(value)}                                      >
@@ -98,13 +108,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                                       </Select>
                                   </div>
                                   <div className="mb-6">
-                                    <label htmlFor="status-Rider" className="block text-sm font-medium text-gray-700 mb-2"
+                                    <label htmlFor="status-Hub2" className="block text-sm font-medium text-gray-700 mb-2"
                                     >To</label>
                                     <Select
                                         value={newtohub}
                                         onValueChange={(value) => setToHub(value)}                                      >
                                         <SelectTrigger className="w-full min-h-[44px] text-gray-800 shadow-sm">
-                                          <SelectValue placeholder="Select Rider" />
+                                          <SelectValue placeholder="Select Hub" />
                                             <SelectContent>
                                                 <SelectItem value="SH-TWN-PS1">SH-TWN-PS1</SelectItem>
                                                 <SelectItem value="SH-TWN-PS2">SH-TWN-PS2</SelectItem>
@@ -134,7 +144,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             )}
                             </form>
                         </div>
-            <RouteDataTable/>
+            <ShipmentDataTable/>
           </div>
         </SidebarInset>
       </div>

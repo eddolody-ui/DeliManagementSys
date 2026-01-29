@@ -28,7 +28,7 @@
     {path:"/Route", element:<RoutePage />},
     {path:"/Route/:RouteId", element:<RouteDetail />},
     {path:"/Shipment", element:<ShipmentPage />},
-    {path:"/ShipmentDetail/:ShipmentId", element:<ShipmentDetail />},
+    {path:"/Shipment/:ShipmentId", element:<ShipmentDetail />},
   ])
   
   createRoot(document.getElementById("root")!).render(
