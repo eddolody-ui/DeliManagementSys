@@ -9,15 +9,11 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" })
 })
 
-app.listen(PORT, async () => {
-  await connectDB();
-  console.log(`Server is running on PORT : ${PORT}`);
-});
-
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from backend!" });
 });
 
-app.listen(ENV_VARS.PORT, () => {
-  console.log(`Server running on port ${ENV_VARS.PORT}`);
+app.listen(PORT, async () => {
+  await connectDB();
+  console.log(`Server is running on PORT : ${PORT}`);
 });

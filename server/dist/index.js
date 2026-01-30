@@ -17,13 +17,10 @@ const PORT = envVars_1.ENV_VARS.PORT || 5000;
 app_1.app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
 });
+app_1.app.get("/api/hello", (req, res) => {
+    res.json({ message: "Hello from backend!" });
+});
 app_1.app.listen(PORT, () => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, db_1.connectDB)();
     console.log(`Server is running on PORT : ${PORT}`);
 }));
-app_1.app.get("/api/hello", (req, res) => {
-    res.json({ message: "Hello from backend!" });
-});
-app_1.app.listen(envVars_1.ENV_VARS.PORT, () => {
-    console.log(`Server running on port ${envVars_1.ENV_VARS.PORT}`);
-});

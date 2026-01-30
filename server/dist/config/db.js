@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveDeliRoute = exports.DeliRoute = exports.saveShipper = exports.Shipper = exports.saveOrder = exports.Order = exports.connectDB = void 0;
+exports.User = exports.saveShipment = exports.Shipment = exports.saveDeliRoute = exports.DeliRoute = exports.saveShipper = exports.Shipper = exports.saveOrder = exports.Order = exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 /* =======================
    MongoDB Connection
@@ -55,7 +55,7 @@ const OrderSchema = new mongoose_1.default.Schema({
     Note: { type: String },
     shipperId: { type: mongoose_1.default.Schema.Types.Mixed, ref: 'Shipper', required: false },
     Status: { type: String,
-        enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "In Route", "Delivered", "Return To Sender", "Cancelled"],
+        enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "Add To Shipment", "In Route", "Delivered", "Return To Sender", "Cancelled"],
         default: "Pending" },
     log: [
         {
@@ -153,7 +153,6 @@ const RouteSchema = new mongoose_1.default.Schema({
     Hub: { type: String, required: true },
     AssignPersonName: { type: String, required: true },
     DateCreated: { type: Date, default: Date.now },
-    // 🔥 FIX HERE
     orders: [
         {
             type: mongoose_1.default.Schema.Types.ObjectId,
@@ -185,3 +184,51 @@ const saveDeliRoute = (routeData) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.saveDeliRoute = saveDeliRoute;
+const ShipmentSchema = new mongoose_1.default.Schema({
+    ShipmentId: {
+        type: String,
+        default: function () {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        },
+    },
+    FromHub: { type: String, required: true },
+    ToHub: { type: String, required: true },
+    DateCreated: { type: Date, default: Date.now },
+    orders: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "Order",
+            default: [],
+        },
+    ],
+    // Shipment process log
+    log: [
+        {
+            status: { type: String },
+            message: { type: String },
+            timestamp: { type: Date, default: Date.now },
+            createdBy: { type: String },
+        }
+    ],
+}, { timestamps: true });
+const Shipment = mongoose_1.default.models.Shipment || mongoose_1.default.model("Shipment", ShipmentSchema);
+exports.Shipment = Shipment;
+const saveShipment = (ShipmentData) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const shipment = new Shipment(ShipmentData);
+        return yield shipment.save();
+    }
+    catch (error) {
+        console.error(" Shipment save error:", error);
+        throw error;
+    }
+});
+exports.saveShipment = saveShipment;
+// User schema and model
+const UserSchema = new mongoose_1.default.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, required: true }
+});
+const User = mongoose_1.default.models.User || mongoose_1.default.model("User", UserSchema);
+exports.User = User;

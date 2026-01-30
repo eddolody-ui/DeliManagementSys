@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, TopNavbar } from "@/components/contentarea"
 import { ShipperDataTable } from "@/components/DataTable"
-export function Finace() {
+export function Finance() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">

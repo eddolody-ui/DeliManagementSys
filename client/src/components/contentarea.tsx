@@ -25,6 +25,7 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -81,7 +82,8 @@ const items: MenuItem[] = [
   icon: AiOutlineTruck,
  },
   { title: "Finance",
-   url: "/Finance/Shipper",
+   children:[
+    {title: "Create Recript", url: "/Finance/Shipper", icon: Users}],
   icon: SiCashapp,
  },
 
@@ -192,6 +194,36 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="p-1 rounded w-full justify-start">
+              <Avatar className="mr-2">
+                <AvatarImage src="/avatar.png" />
+                <AvatarFallback>M</AvatarFallback>
+              </Avatar>
+              <span className="group-data-[collapsible=icon]:hidden">Profile</span>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem asChild>
+              <Link to="/profile">Profile</Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link to="/settings">Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-red-600">
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
@@ -234,35 +266,6 @@ export function TopNavbar() {
 
       {/* SEARCH (writes `q` query param) */}
       <TopNavSearch />
-
-      {/* PROFILE DROPDOWN (RIGHT) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="p-1 rounded-full border">
-            <Avatar className="">
-              <AvatarImage src="/avatar.png" />
-              <AvatarFallback>MT</AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem asChild>
-            <Link to="/profile">Profile</Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem asChild>
-            <Link to="/settings">Settings</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </header>
   )
 }
@@ -787,7 +790,7 @@ function TopNavSearch() {
   return (
     <input
       type="text"
-      className="p-1.5 px-4 rounded-full border shadow-inner w-56 mr-4"
+      className="p-1.5 px-4 border-b shadow-inner w-56 mr-4"
       placeholder="Search..."
       value={q}
       onChange={onChange}

@@ -1,70 +1,58 @@
-
-/**
- * updateOrderStatus Function
- * Relationships:
- * - Called from OrderDetail page when status is changed
- * - PATCH /api/orders/:trackingId/status endpoint
- */
-export const updateOrderStatus = async (
-  trackingId: string,
-  status: string,
-  message?: string,
-  createdBy?: string
-) => {
-  const res = await api.patch(`/api/orders/${trackingId}/status`, {
-    status,
-    message,
-    createdBy,
-  });
-  return res.data;
-};
-
 import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:5000",
 });
 
-export const addOrderToRoute = async (
-  routeId: string,
-  trackingId: string
-) => {
-  try {
-    const res = await api.put(`/api/routes/${routeId}`, { trackingId });
-    return res.data;
-  } catch (error: any) {
-    if (error.response) {
-      // Backend returned an error
-      throw new Error(error.response.data.message || "Failed to add order");
-    } else {
-      throw new Error(error.message || "Network error");
-    }
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
+
+// Handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API functions
+export const loginUser = async (username: string, password: string) => {
+  const response = await api.post('/api/auth/login', { username, password });
+  return response.data;
 };
 
-export const addOrderToShipment = async (
-  ShipmentId: string,
-  trackingId: string
-) => {
-  try {
-    const res = await api.put(`/api/shipments/${ShipmentId}`, { trackingId });
-    return res.data;
-  } catch (error: any) {
-    if (error.response) {
-      // Backend returned an error
-      throw new Error(error.response.data.message || "Failed to add order");
-    } else {
-      throw new Error(error.message || "Network error");
-    }
-  }
+export const registerUser = async (username: string, password: string, role: string) => {
+  const response = await api.post('/api/auth/register', { username, password, role });
+  return response.data;
 };
 
 /**
- * OrderData Interface
- * 
- * Application တစ်လျှောက် အသုံးပြုသော order data ၏ structure ကို define လုပ်သည်။
- * ဤ interface သည် frontend forms နှင့် backend API ကြားတွင် type safety ကို ensure လုပ်သည်။
- * 
+ * logoutUser Function
+ *
+ * Logs out the user by clearing local storage.
+ *
+ * Relationships:
+ * - Called from AuthContext to log out the user
+ * - Clears accessToken and user from localStorage
+ */
+export const logoutUser = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('user');
+};
+
+/**
  * Relationships:
  * - createOrder function မှ input data ကို validate လုပ်ရန် အသုံးပြုသည်
  * - getOrders function မှ backend မှ return လုပ်သော data ဖြစ်သည်
@@ -144,6 +132,22 @@ export const getOrder = async (trackingId: string): Promise<OrderData & { _id: s
   const res = await api.get(`/api/orders/${trackingId}`);
   return res.data;
 };
+
+/**
+ * updateOrderStatus Function
+ *
+ * Updates the status of an order and logs the change.
+ *
+ * Relationships:
+ * - Called from OrderDetail component to update order status
+ * - Sends PATCH request to /api/orders/:trackingId/status
+ * - Backend updates order status and appends log entry
+ */
+export const updateOrderStatus = async (trackingId: string, status: string, message?: string, createdBy?: string) => {
+  const res = await api.patch(`/api/orders/${trackingId}/status`, { status, message, createdBy });
+  return res.data;
+};
+
 //..........................................................................................................//
 
 export interface ShipperData {
@@ -201,6 +205,21 @@ export const getRoute = async (id: string): Promise<RouteData & { _id: string; o
   return res.data;
 };
 
+/**
+ * addOrderToRoute Function
+ *
+ * Adds an order to a route by tracking ID.
+ *
+ * Relationships:
+ * - Called from RouteDetail component to add orders to a route
+ * - Sends POST request to /api/routes/:routeId/orders/:trackingId
+ * - Backend adds the order to the route's orders array
+ */
+export const addOrderToRoute = async (routeId: string, trackingId: string) => {
+  const res = await api.post(`api/routes/${routeId}/orders/${trackingId}`);
+  return res.data;
+};
+
 //..........................................................................................................//
 
 export interface ShipmentData {
@@ -227,6 +246,21 @@ export const getShipments = async (): Promise<ShipmentData[]> => {
 export const getShipment = async (id: string): Promise<ShipmentData & { _id: string; orders?: (OrderData & { _id: string; createdAt: string; updatedAt: string })[] }> => {
   const res = await api.get(`api/shipments/${id}`);
   console.log("API response:", res.data);
+  return res.data;
+};
+
+/**
+ * addOrderToShipment Function
+ *
+ * Adds an order to a shipment by tracking ID.
+ *
+ * Relationships:
+ * - Called from ShipmentDetail component to add orders to a shipment
+ * - Sends POST request to /api/shipments/:shipmentId/orders/:trackingId
+ * - Backend adds the order to the shipment's orders array
+ */
+export const addOrderToShipment = async (shipmentId: string, trackingId: string) => {
+  const res = await api.post(`api/shipments/${shipmentId}/orders/${trackingId}`);
   return res.data;
 };
 

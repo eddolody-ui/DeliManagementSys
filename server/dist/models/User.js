@@ -32,36 +32,44 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.app = void 0;
-const compression_1 = __importDefault(require("compression"));
-const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const cors_1 = __importDefault(require("cors"));
-const express_1 = __importStar(require("express"));
-const helmet_1 = __importDefault(require("helmet"));
-const morgan_1 = __importDefault(require("morgan"));
-// import { errorHandler } from "./middlewares/errorHandler";
-const order_rout_1 = __importDefault(require("./order.rout"));
-const shipper_rout_1 = __importDefault(require("./shipper.rout"));
-const route_rout_1 = __importDefault(require("./route.rout"));
-const shipment_route_1 = __importDefault(require("./shipment.route"));
-const auth_1 = __importDefault(require("./routes/auth"));
-const app = (0, express_1.default)();
-exports.app = app;
-// Middlewares
-app.use((0, helmet_1.default)());
-app.use((0, cors_1.default)());
-app.use((0, morgan_1.default)("combined"));
-app.use((0, express_1.json)());
-app.use((0, express_1.urlencoded)({ extended: true }));
-app.use((0, cookie_parser_1.default)());
-app.use((0, compression_1.default)());
-// Routes
-app.use("/api/auth", auth_1.default);
-app.use("/api/orders", order_rout_1.default);
-app.use("/api/shippers", shipper_rout_1.default);
-app.use("/api/routes", route_rout_1.default);
-app.use("/api/shipments", shipment_route_1.default);
+const mongoose_1 = __importStar(require("mongoose"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const UserSchema = new mongoose_1.Schema({
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['Admin', 'Operation', 'Finance'],
+        required: true
+    }
+}, {
+    timestamps: true
+});
+// Compare password method
+UserSchema.methods.comparePassword = function (candidatePassword) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return bcryptjs_1.default.compare(candidatePassword, this.password);
+    });
+};
+exports.default = mongoose_1.default.model('User', UserSchema);
