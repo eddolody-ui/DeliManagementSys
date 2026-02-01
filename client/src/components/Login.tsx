@@ -31,10 +31,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full px-4">
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg">
         <CardHeader>
-          <CardTitle>Login to DeliManagementSys</CardTitle>
+          <CardTitle>LOGIN</CardTitle>
           <CardDescription>
             Enter your credentials to access the system
           </CardDescription>

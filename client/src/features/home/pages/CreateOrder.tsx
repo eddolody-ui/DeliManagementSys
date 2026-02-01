@@ -30,6 +30,15 @@ export function CreateOrderForm() {
   const [, setShippers] = useState<(ShipperData & { _id: string })[]>([]);
   const [file, setFile] = useState<File | null>(null)
 
+  // Town fees mapping
+  const townFees: { [key: string]: number } = {
+    Yangon: 2500,
+    Mandalay: 4000,
+    Naypyidaw: 4000,
+    Bago: 2500,
+    Sagaing: 5000,
+  };
+
   // Form data state
   const [formData, setFormData] = useState({
     TrackingId: "",
@@ -37,13 +46,16 @@ export function CreateOrderForm() {
     CustomerContact: "",
     CustomerAddress: "",
     TownShip: "",
-    DeliFee:"",
-    Amount: 0,
+    DeliFee: 0,
+    ProductAmount: 0,
     Type: "COD",
     Note: "",
     Status: "Pending",
     shipperId: shipperId || ""
   });
+
+  // Calculate total amount
+  const totalAmount = formData.Type === "COD" ? formData.ProductAmount + formData.DeliFee : formData.ProductAmount;
 
   // Fetch shippers
   useEffect(() => {
@@ -69,7 +81,7 @@ export function CreateOrderForm() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "Amount" ? Number(value) : value,
+      [name]: name === "ProductAmount" ? Number(value) : value,
     }));
   };
 
@@ -86,7 +98,7 @@ export function CreateOrderForm() {
     }
 
     try {
-      await createOrder({ ...formData, Status: formData.Status || "Pending" });
+      await createOrder({ ...formData, Amount: totalAmount, Status: formData.Status || "Pending" });
 
       // Show success toast
 
@@ -174,49 +186,58 @@ export function CreateOrderForm() {
                   required
                 />
               </div>
+              {/* TownShip */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Town ship
+                  TownShip
                 </label>
-                <Input
-                  name="Tsp"
-                  value={formData.Amount}
-                  onChange={handleChange}
-                  placeholder="Enter Amount"
-                  className="rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <Select
+                  value={formData.TownShip}
+                  onValueChange={(value) => {
+                    const fee = townFees[value] || 0;
+                    setFormData(prev => ({ ...prev, TownShip: value, DeliFee: fee }));
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select town" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(townFees).map(([town, fee]) => (
+                      <SelectItem key={town} value={town}>
+                        {town} - {fee} MMK
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              {/* Product Amount */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount
+                  Product Amount
                 </label>
                 <Input
-                  name="Amount"
+                  name="ProductAmount"
                   type="number"
                   min={0}
-                  value={formData.Amount}
+                  value={formData.ProductAmount}
                   onChange={handleChange}
-                  placeholder="Enter Amount"
+                  placeholder="Enter Product Amount"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
-              {/* Amount */}
+              {/* Total Amount (read-only) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount
+                  Total Amount
                 </label>
                 <Input
-                  name="Amount"
                   type="number"
-                  min={0}
-                  value={formData.Amount}
-                  onChange={handleChange}
-                  placeholder="Enter Amount"
+                  value={totalAmount}
+                  placeholder="Total Amount"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
+                  readOnly
                 />
               </div>
               {/* Type */}

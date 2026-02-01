@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-
-
 /* =======================
    MongoDB Connection
 ======================= */
@@ -19,32 +17,19 @@ export const connectDB = async () => {
   }
 };
 
-/* =======================
-   Order Schema
-======================= */
-/**
- * Order Schema Definition
- * 
- * Order documents အတွက် MongoDB schema ကို define လုပ်သည်။
- * Structured data model ကို create လုပ်ရန် Mongoose ကို အသုံးပြုသည်။
- * 
- * Relationships:
- * - Client serviceApi.ts ၏ OrderData interface နှင့် fields များ match ဖြစ်သည်
- * - Database operations အတွက် Order model မှ အသုံးပြုသည်
- * - Timestamps သည် createdAt နှင့် updatedAt fields များကို automatically ထည့်သည်
- * - MongoDB ၏ Order collection နှင့် connected ဖြစ်သည်
- */
 const OrderSchema = new mongoose.Schema(
   {
     TrackingId: { type: String, required: true },
     CustomerName: { type: String, required: true },
     CustomerContact: { type: Number, required: true },
     CustomerAddress: { type: String, required: true },
+    TownShip: { type: String, required: true },
+    DeliFee: { type: Number, required: true },
     Amount: { type: Number, required: true },
     Type: { type: String, required: true },
     Note: { type: String },
     shipperId: { type: mongoose.Schema.Types.Mixed, ref: 'Shipper', required: false },
-    Status: { type: String, 
+    Status: { type: String,
               enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "Add To Shipment", "In Route", "Delivered", "Return To Sender", "Cancelled"],
               default: "Pending" },
     log: [

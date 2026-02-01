@@ -20,6 +20,7 @@ import { MdOutlineRoute } from "react-icons/md";
 import { IoIosContacts } from "react-icons/io";
 import { AiOutlineTruck } from "react-icons/ai";
 import { SiCashapp } from "react-icons/si";
+import  ShopifyLogo  from "@/components/ui/logo";
 //Sidebar import //
 import {
   Sidebar,
@@ -30,7 +31,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuSubItem,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Tooltip,
@@ -39,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useAuth } from "@/context/AuthContext";
 //Top-Directory-Link import//
 import {
   Breadcrumb,
@@ -57,50 +59,67 @@ type MenuItem = {
   icon: React.FC<any>
   children?: MenuItem[]
 }
-const items: MenuItem[] = [
-  { title: "Dashboard", url: "/", 
-    icon: FiAirplay },
-  
-  { title: "Order", url:"/Order",
-    icon: FiShoppingCart,
-  },
-
- { title: "Shipper",
-   icon: IoIosContacts,
-   children: [
-     { title: "Shipper List", url: "/Shipper", icon: Users },
-     { title: "Create Shipper", url: "/Shipper/CreateShipper", icon: Lock },
-   ],
- },
-
- { title: "Route",
-   url: "/Route",
-  icon: MdOutlineRoute,
- },
-  { title: "Shipment",
-   url: "/Shipment",
-  icon: AiOutlineTruck,
- },
-  { title: "Finance",
-   children:[
-    {title: "Create Recript", url: "/Finance/Shipper", icon: Users}],
-  icon: SiCashapp,
- },
-
-
-]
-
 //Section-For-Sidebar//
 
 export function AppSidebar() {
+  const { logout, user } = useAuth();
+  const { state } = useSidebar();
+
+  // Hide sidebar if not authenticated
+  if (!user) {
+    return null;
+  }
+
+  // Define menu items based on user role
+  let items: MenuItem[] = [];
+  if (user.role === 'Admin') {
+    items = [
+      { title: "Dashboard", url: "/", icon: FiAirplay },
+      { title: "Order", url:"/Order", icon: FiShoppingCart },
+      { title: "Shipper", icon: IoIosContacts, children: [
+        { title: "Shipper List", url: "/Shipper", icon: Users },
+        { title: "Create Shipper", url: "/Shipper/CreateShipper", icon: Lock },
+      ] },
+      { title: "Route", url: "/Route", icon: MdOutlineRoute },
+      { title: "Shipment", url: "/Shipment", icon: AiOutlineTruck },
+      { title: "Finance", children: [
+        { title: "Create Receipt", url: "/Finance/Shipper", icon: Users }
+      ], icon: SiCashapp },
+    ];
+  } else if (user.role === 'Operation') {
+    items = [
+      { title: "Order", url:"/Order", icon: FiShoppingCart },
+      { title: "Shipper", icon: IoIosContacts, children: [
+        { title: "Shipper List", url: "/Shipper", icon: Users },
+        { title: "Create Shipper", url: "/Shipper/CreateShipper", icon: Lock },
+      ] },
+      { title: "Route", url: "/Route", icon: MdOutlineRoute },
+      { title: "Shipment", url: "/Shipment", icon: AiOutlineTruck },
+    ];
+  } else if (user.role === 'Finance') {
+    items = [
+      { title: "Finance", children: [
+        { title: "Create Receipt", url: "/Finance/Shipper", icon: Users }
+      ], icon: SiCashapp },
+    ];
+  }
+
   // state to control which dropdowns are open
   const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({})
+
+  // Close all dropdowns when sidebar collapses
+  React.useEffect(() => {
+    if (state === "collapsed") {
+      setOpenDropdowns({});
+    }
+  }, [state]);
 
   // Note: `AppSidebar` ပြင်ပမှာ မလိုအပ်သော logic များကို မထည့်ဖို့ ရည်ရွယ်ထားပါသည် —
   // sidebar items တွေကို `items` constant မှ တိုက်ရိုက် ဖော်ပြပြီး၊ dropdown state ကို
   // local state ဖြင့် ထိန်းချုပ်သည်။
 
   const toggleDropdown = (title: string) => {
+    if (state === "collapsed") return; // Prevent opening dropdowns when sidebar is collapsed
     setOpenDropdowns((prev) => ({
       ...prev,
       [title]: !prev[title],
@@ -108,15 +127,16 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon" className="h-screen sticky top-0 left-0 overflow-x-hidden">
+    <Sidebar collapsible="icon" className="h-screen sticky top-0 left-0 overflow-x-hidden ">
     <SidebarHeader className="flex-row items-center justify-between p-4 sticky top-0 bg-white z-10">
     {/* Title */}
-    <span className="group-data-[collapsible=icon]:hidden font-semibold ml-  ">
-      SHOPIFY
-    </span>
+    <div className="flex items-center">
+        <img src="/pie-chart-svgrepo-com.svg" className="w-8 h-8" alt="Pie Chart Logo" />
+        <span className="group-data-[collapsible=icon]:hidden font-semibold">
+            <ShopifyLogo width={100} color="black"/>
+        </span>
+    </div>
     {/* Trigger inline with title */}
-    <SidebarTrigger className="w-5 h-5"/>
-
   </SidebarHeader>
       <SidebarContent className="overflow-y-auto h-[calc(100vh-56px)] overflow-x-hidden bg-white">
         <SidebarMenu className="text-sm ml-2 m-2">
@@ -218,7 +238,7 @@ export function AppSidebar() {
               <Link to="/settings">Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
+            <DropdownMenuItem className="text-red-600" onClick={logout}>
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -277,6 +297,7 @@ export default function Dashboard() {
   const [totalOrders, setTotalOrders] = useState<number>(0);
   const [DeliveredCount, setDeliveredCount] = useState<number>(0);
   const [DeliveredAmountCount, setDeliveredAmountCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchOrderStats = async () => {
@@ -298,11 +319,29 @@ export default function Dashboard() {
         setPendingCount(0);
         setDeliveredAmountCount(0);
         setDeliveredCount(0);
+      } finally {
+        setLoading(false);
       }
     };
     fetchOrderStats();
   }, []);
-  
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="p-6 bg-white rounded-lg border shadow-sm animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-5 w-5 bg-gray-200 rounded"></div>
+            </div>
+            <div className="mt-4 h-8 bg-gray-200 rounded w-16"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <StatusCard

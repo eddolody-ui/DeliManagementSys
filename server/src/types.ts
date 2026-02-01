@@ -4,6 +4,8 @@ export interface OrderSchema {
   CustomerName: string;
   CustomerContact?: string;
   CustomerAddress?: string;
+  TownShip: string;
+  DeliFee: number;
   Amount: number;
   Type: string;
   Note?: string;
