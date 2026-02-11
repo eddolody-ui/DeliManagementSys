@@ -91,8 +91,9 @@ export function ShipperDetail() {
       })
       setShipper(updated)
       setShowEditModal(false)
-    } catch (err) {
-      setEditError("Failed to update shipper information")
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || "Failed to update shipper information"
+      setEditError(errorMessage)
     } finally {
       setEditLoading(false)
     }

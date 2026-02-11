@@ -1,8 +1,35 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: "https://retailshopbackend.onrender.com",
 });
+
+const isMutationRequest = (method?: string) => {
+  if (!method) return false;
+  return ["post", "patch", "put", "delete"].includes(method.toLowerCase());
+};
+
+const shouldToastForRequest = (url?: string) => {
+  if (!url) return false;
+  // Skip auth endpoints to avoid noisy login/logout toasts
+  return !url.includes("/api/auth/");
+};
+
+const successMessageFromRequest = (method?: string, message?: string) => {
+  if (message) return message;
+  switch ((method || "").toLowerCase()) {
+    case "post":
+      return "Created successfully";
+    case "patch":
+    case "put":
+      return "Updated successfully";
+    case "delete":
+      return "Deleted successfully";
+    default:
+      return "Success";
+  }
+};
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
@@ -15,8 +42,26 @@ api.interceptors.request.use((config) => {
 
 // Handle auth errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config?.method;
+    const url = response.config?.url;
+
+    if (isMutationRequest(method) && shouldToastForRequest(url)) {
+      const message = successMessageFromRequest(method, response.data?.message);
+      toast.success(message);
+    }
+
+    return response;
+  },
   (error) => {
+    const method = error?.config?.method;
+    const url = error?.config?.url;
+
+    if (isMutationRequest(method) && shouldToastForRequest(url) && error?.response?.status !== 401) {
+      const message = error?.response?.data?.message || "Request failed";
+      toast.error(message);
+    }
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('accessToken');

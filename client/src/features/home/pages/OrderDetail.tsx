@@ -137,7 +137,8 @@ export function OrderDetail() {
       setOrder(updated);
       setShowEditInfoModal(false);
     } catch (err: any) {
-      setEditError(err?.response?.data?.message || "Failed to update order information");
+      const errorMessage = err?.response?.data?.message || "Failed to update order information";
+      setEditError(errorMessage);
     } finally {
       setEditLoading(false);
     }
@@ -155,7 +156,8 @@ export function OrderDetail() {
       setShowModal(false);
       setChangeReason("");
     } catch (err: any) {
-      setStatusError("Failed to update status");
+      const errorMessage = err?.response?.data?.message || "Failed to update status";
+      setStatusError(errorMessage);
     } finally {
       setStatusLoading(false);
     }

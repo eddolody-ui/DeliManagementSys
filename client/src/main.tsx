@@ -19,6 +19,7 @@ import { StrictMode } from "react";
   import Login from "./components/Login";
   import ProtectedRoute from "./components/ProtectedRoute.tsx";
   import { Profile } from "./features/home/pages/Profile.tsx";
+  import { Toaster } from "sonner";
 
 
   const router =createBrowserRouter ([
@@ -45,6 +46,7 @@ import { StrictMode } from "react";
         <AuthProvider>
             <SidebarProvider>
                 <RouterProvider router={router}/>
+                <Toaster position="bottom-right" richColors />
             </SidebarProvider>
         </AuthProvider>
     </StrictMode>,
