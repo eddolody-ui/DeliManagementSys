@@ -18,6 +18,7 @@ import { StrictMode } from "react";
   import { AuthProvider } from "./context/AuthContext";
   import Login from "./components/Login";
   import ProtectedRoute from "./components/ProtectedRoute.tsx";
+  import { Profile } from "./features/home/pages/Profile.tsx";
 
 
   const router =createBrowserRouter ([
@@ -35,7 +36,8 @@ import { StrictMode } from "react";
     {path:"/Shipment", element:<ProtectedRoute allowedRoles={['Admin', 'Operation']}><ShipmentPage /></ProtectedRoute>},
     {path:"/Shipment/:ShipmentId", element:<ProtectedRoute allowedRoles={['Admin', 'Operation']}><ShipmentDetail /></ProtectedRoute>},
     {path:"/Finance/Shipper", element:<ProtectedRoute allowedRoles={['Admin', 'Finance']}><Finance /></ProtectedRoute>},
-    
+    {path:"/profile", element:<ProtectedRoute><Profile /></ProtectedRoute>},
+
   ])
   
   createRoot(document.getElementById("root")!).render(

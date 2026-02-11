@@ -217,12 +217,12 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="p-1 rounded w-full justify-start">
-              <Avatar className="mr-2">
+            <Button variant="ghost" className="p-1 rounded w-full justify-start group-data-[collapsible=icon]:justify-center">
+              <Avatar className="mr-2 group-data-[collapsible=icon]:size-6 group-data-[collapsible=icon]:mr-0">
                 <AvatarImage src="/avatar.png" />
-                <AvatarFallback>M</AvatarFallback>
+                <AvatarFallback>{user.username?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="group-data-[collapsible=icon]:hidden">Profile</span>
+              <span className="group-data-[collapsible=icon]:hidden">Profile ({user.role})</span>
             </Button>
           </DropdownMenuTrigger>
 
@@ -231,7 +231,7 @@ export function AppSidebar() {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem asChild>
-              <Link to="/profile">Profile</Link>
+              <Link to="/profile">Profile ({user.role})</Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild>

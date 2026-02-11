@@ -81,7 +81,7 @@ const ShopifyLogo = ({ width = 320, color = "black" }) => {
           fill={color}
           className="text"
         >
-          Shopify
+          Swift
         </text>
 
         {/* Underline */}

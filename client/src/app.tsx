@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HomePage } from "@/features/home/pages/HomePage";
-import { Order } from "@/features/home/pages/Order";
-import { OrderDetail } from "@/features/home/pages/OrderDetail";
-import { CreateOrderForm } from "@/features/home/pages/CreateOrder";
+import { HomePage } from "./features/home/pages/HomePage";
+import { Order } from "./features/home/pages/Order";
+import { OrderDetail } from "./features/home/pages/OrderDetail";
+import { CreateOrderForm } from "./features/home/pages/CreateOrder";
 import { Shipper } from "./features/home/pages/Shipper";
 import { CreateShipper } from "./features/home/pages/CreateShipper";
 import { ShipperDetail } from "./features/home/pages/ShipperDetail";
@@ -14,6 +14,7 @@ import { RoutePage } from "./features/home/pages/Route";
 import { ShipmentPage } from "./features/home/pages/Shipment";
 import {ShipmentDetail} from "./features/home/pages/ShipmentDetail";
 import { Finance } from "./features/home/pages/Finical";
+import {Profile} from "./features/home/pages/Profile.tsx";
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error?: Error}> {
   constructor(props: {children: ReactNode}) {
@@ -91,7 +92,8 @@ function App() {
           <Route path="/Route/:RouteId" element={<RouteDetail />} />
           <Route path="/Shipment" element={<ShipmentPage />} />
           <Route path="/Shipment/:ShipmentId" element={<ShipmentDetail />} />
-          <Route path="/Finance/Shipper" element={<Finance />} />                           
+          <Route path="/Finance/Shipper" element={<Finance />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
         <Toaster richColors /> 
       </BrowserRouter>

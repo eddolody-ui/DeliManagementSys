@@ -55,7 +55,17 @@ export function CreateOrderForm() {
   });
 
   // Calculate total amount
-  const totalAmount = formData.Type === "COD" ? formData.ProductAmount + formData.DeliFee : formData.ProductAmount;
+  const totalAmount = () => {
+    const productAmount = formData.ProductAmount || 0;
+    const deliFee = formData.DeliFee || 0;
+    if (formData.Type === "Prepaid+DeliFee" || formData.Type === "Return") {
+    return formData.DeliFee;
+  }
+  if (formData.Type === "Prepaid") {
+    return 0;
+  }
+    return productAmount + deliFee;
+  };
 
   // Fetch shippers
   useEffect(() => {
@@ -98,7 +108,7 @@ export function CreateOrderForm() {
     }
 
     try {
-      await createOrder({ ...formData, Amount: totalAmount, Status: formData.Status || "Pending" });
+      await createOrder({ ...formData, Amount: totalAmount(), Status: formData.Status || "Pending" });
 
       // Show success toast
 
@@ -234,7 +244,7 @@ export function CreateOrderForm() {
                 </label>
                 <Input
                   type="number"
-                  value={totalAmount}
+                  value={totalAmount()}
                   placeholder="Total Amount"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   readOnly
@@ -255,6 +265,7 @@ export function CreateOrderForm() {
                     <SelectContent>
                       <SelectItem value="COD">COD</SelectItem>
                       <SelectItem value="Prepaid">Prepaid</SelectItem>
+                      <SelectItem value="Prepaid+DeliFee">Prepaid+DeliFee</SelectItem>
                       <SelectItem value="Return">Return</SelectItem>
                     </SelectContent>
                   </Select>
