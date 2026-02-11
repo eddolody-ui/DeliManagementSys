@@ -31,8 +31,17 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 w-full px-4">
-      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+    <div className="min-h-screen flex items-center justify-center w-full px-4 relative overflow-hidden">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/logigif.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+      <div className="absolute inset-0 bg-white/70" />
+      <Card className="relative z-10 w-full max-w-sm sm:max-w-md">
         <CardHeader>
           <CardTitle>LOGIN</CardTitle>
           <CardDescription>
