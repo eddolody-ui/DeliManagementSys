@@ -80,6 +80,46 @@ router.get("/:id/orders", async (req, res) => {
   }
 });
 
+// Update shipper info by _id or custom ShipperId
+router.patch("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const allowedFields = [
+      "ShipperName",
+      "ShipperContact",
+      "ShipperAddress",
+      "PickUpAddress",
+      "BillingType",
+      "Note",
+    ];
+
+    const updates: Record<string, any> = {};
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    let shipper = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      shipper = await Shipper.findByIdAndUpdate(id, { $set: updates }, { new: true });
+    }
+
+    if (!shipper) {
+      shipper = await Shipper.findOneAndUpdate({ ShipperId: id }, { $set: updates }, { new: true });
+    }
+
+    if (!shipper) {
+      return res.status(404).json({ message: "Shipper not found" });
+    }
+
+    res.json(shipper);
+  } catch (error) {
+    console.error("Shipper update error:", error);
+    res.status(500).json({ message: "Failed to update shipper", error });
+  }
+});
+
 
 router.get("/:id", async (req, res) => {
   try {

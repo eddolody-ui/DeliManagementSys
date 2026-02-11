@@ -86,12 +86,12 @@ const ShopifyLogo = ({ width = 320, color = "black" }) => {
 
         {/* Underline */}
         <line
-          x1="120"
+          x1="135"
           y1="82"
-          x2="260"
+          x2="290"
           y2="82"
           stroke={color}
-          strokeWidth="4"
+          strokeWidth="2"
           strokeLinecap="round"
           className="underline"
         />

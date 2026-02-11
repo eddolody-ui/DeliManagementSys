@@ -31,6 +31,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuSubItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
@@ -256,7 +257,8 @@ export function TopNavbar() {
   return (
     <header className="h-14 border-b flex items-center px-4 bg-white w-full">
       {/* LEFT */}
-      <div className="flex items-center flex-1 gap-4">
+        <div className="flex items-center flex-1 gap-4">
+        <SidebarTrigger className="md:hidden" />
         {paths.length > 0 && (
           <Breadcrumb>
             <BreadcrumbList>
@@ -346,19 +348,19 @@ export default function Dashboard() {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <StatusCard
         title="Total Orders"
-        value={totalOrders.toString()}
+        value={totalOrders.toString()+ " PCS"}
         icon={<FiShoppingCart className="h-5 w-5" />}
         />
 
     <StatusCard
         title="Pending"
-        value={pendingCount.toString()}
+        value={pendingCount.toString()+ " PCS"}
         icon={<CgTrending className="h-5 w-5"/>}
     />
 
     <StatusCard
         title="Delivered"
-        value={DeliveredCount.toString()}
+        value={DeliveredCount.toString()+ " PCS"}
         icon={<Users className="h-5 w-5" />}
         />
 
@@ -420,25 +422,25 @@ export  function EachShipperData({ shipperId }: { shipperId?: string } = {}) {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <StatusCard 
         title="Total Orders"
-        value={totalOrders.toString()}
+        value={totalOrders.toString()+ " PCS"}
         icon={<FiShoppingCart className="h-5 w-5" />}
         />
 
     <StatusCard
         title="Pending"
-        value={pendingCount.toString()}
+        value={pendingCount.toString()+ " PCS"}
         icon={<CgTrending className="h-5 w-5"/>}
     />
 
     <StatusCard
         title="Customers"
-        value={DeliveredCount}
+        value={DeliveredCount+ " PCS"}
         icon={<Users className="h-5 w-5" />}
         />
 
     <StatusCard
         title="RTS"
-        value={RtsCount}
+        value={RtsCount+ " PCS"}
         icon={<IoCarSport className="h-5 w-5" />}
         />
     </div>

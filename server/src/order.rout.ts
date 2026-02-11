@@ -1,5 +1,32 @@
 import { Router } from "express";
 import { saveOrder, Order } from "./config/db";
+import jwt, { type JwtPayload } from "jsonwebtoken";
+import User from "./models/User";
+import { ENV_VARS } from "./config/envVars";
+
+const ALLOWED_EDITOR_ROLES = ["Admin", "Finance"] as const;
+
+const getUserRoleFromToken = async (authorizationHeader?: string) => {
+  if (!authorizationHeader?.startsWith("Bearer ")) return null;
+
+  const token = authorizationHeader.split(" ")[1];
+  if (!token || !ENV_VARS.ACCESS_JWT_SECRET) return null;
+
+  const decoded = jwt.verify(token, ENV_VARS.ACCESS_JWT_SECRET) as JwtPayload | string;
+  if (!decoded || typeof decoded === "string" || !decoded.userId) return null;
+
+  const user = await User.findById(decoded.userId).select("role");
+  return user?.role ?? null;
+};
+
+const ensureEditorAccess = async (authorizationHeader?: string) => {
+  const role = await getUserRoleFromToken(authorizationHeader);
+  if (!role) return { allowed: false, status: 401, message: "Unauthorized" };
+  if (!ALLOWED_EDITOR_ROLES.includes(role as (typeof ALLOWED_EDITOR_ROLES)[number])) {
+    return { allowed: false, status: 403, message: "Only Admin and Finance can update orders" };
+  }
+  return { allowed: true, status: 200, message: "ok" };
+};
 /**
  * PATCH /:trackingId/status - Update Order Status and Log
  *
@@ -12,6 +39,11 @@ import { saveOrder, Order } from "./config/db";
 const router = Router();
 router.patch('/:trackingId/status', async (req, res) => {
   try {
+    const access = await ensureEditorAccess(req.headers.authorization);
+    if (!access.allowed) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
     const { status, message, createdBy } = req.body;
     const order = await Order.findOne({ TrackingId: req.params.trackingId });
     if (!order) {
@@ -30,6 +62,58 @@ router.patch('/:trackingId/status', async (req, res) => {
   } catch (error) {
     console.error('Order status update error:', error);
     res.status(500).json({ message: 'Failed to update status', error });
+  }
+});
+
+/**
+ * PATCH /:trackingId - Update editable order information
+ *
+ * Updates base order fields (customer info, amount, address, etc.) and appends a log entry.
+ */
+router.patch("/:trackingId", async (req, res) => {
+  try {
+    const access = await ensureEditorAccess(req.headers.authorization);
+    if (!access.allowed) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const allowedFields = [
+      "CustomerName",
+      "CustomerContact",
+      "CustomerAddress",
+      "Amount",
+      "Type",
+      "Note",
+      "TownShip",
+      "DeliFee",
+    ];
+
+    const updates: Record<string, any> = {};
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    const order = await Order.findOne({ TrackingId: req.params.trackingId });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    Object.assign(order, updates);
+    order.log = order.log || [];
+    order.log.push({
+      status: order.Status,
+      message: "Order information updated",
+      timestamp: new Date(),
+      createdBy: req.body?.createdBy || "system",
+    });
+
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    console.error("Order info update error:", error);
+    res.status(500).json({ message: "Failed to update order information", error });
   }
 });
 

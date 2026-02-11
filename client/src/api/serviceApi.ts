@@ -148,6 +148,19 @@ export const updateOrderStatus = async (trackingId: string, status: string, mess
   return res.data;
 };
 
+export const updateOrderInfo = async (
+  trackingId: string,
+  payload: Partial<
+    Pick<
+      OrderData,
+      "CustomerName" | "CustomerContact" | "CustomerAddress" | "Amount" | "Type" | "Note"
+    >
+  > & { createdBy?: string }
+) => {
+  const res = await api.patch(`/api/orders/${trackingId}`, payload);
+  return res.data;
+};
+
 //..........................................................................................................//
 
 export interface ShipperData {
@@ -172,6 +185,14 @@ export const getShipper = async (id: string): Promise<ShipperData & { _id: strin
 
 export const getShippers = async (): Promise<(ShipperData & { _id: string })[]> => {
   const res = await api.get("api/shippers");
+  return res.data;
+};
+
+export const updateShipper = async (
+  id: string,
+  payload: Partial<Pick<ShipperData, "ShipperName" | "ShipperContact" | "ShipperAddress" | "PickUpAddress" | "BillingType" | "Note">>
+) => {
+  const res = await api.patch(`api/shippers/${id}`, payload);
   return res.data;
 };
 
