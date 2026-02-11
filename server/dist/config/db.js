@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.saveShipment = exports.Shipment = exports.saveDeliRoute = exports.DeliRoute = exports.saveShipper = exports.Shipper = exports.saveOrder = exports.Order = exports.connectDB = void 0;
+exports.saveShipment = exports.Shipment = exports.saveDeliRoute = exports.DeliRoute = exports.saveShipper = exports.Shipper = exports.saveOrder = exports.Order = exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 /* =======================
    MongoDB Connection
@@ -30,26 +30,13 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.connectDB = connectDB;
-/* =======================
-   Order Schema
-======================= */
-/**
- * Order Schema Definition
- *
- * Order documents အတွက် MongoDB schema ကို define လုပ်သည်။
- * Structured data model ကို create လုပ်ရန် Mongoose ကို အသုံးပြုသည်။
- *
- * Relationships:
- * - Client serviceApi.ts ၏ OrderData interface နှင့် fields များ match ဖြစ်သည်
- * - Database operations အတွက် Order model မှ အသုံးပြုသည်
- * - Timestamps သည် createdAt နှင့် updatedAt fields များကို automatically ထည့်သည်
- * - MongoDB ၏ Order collection နှင့် connected ဖြစ်သည်
- */
 const OrderSchema = new mongoose_1.default.Schema({
     TrackingId: { type: String, required: true },
     CustomerName: { type: String, required: true },
     CustomerContact: { type: Number, required: true },
     CustomerAddress: { type: String, required: true },
+    TownShip: { type: String, required: true },
+    DeliFee: { type: Number, required: true },
     Amount: { type: Number, required: true },
     Type: { type: String, required: true },
     Note: { type: String },
@@ -224,11 +211,3 @@ const saveShipment = (ShipmentData) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.saveShipment = saveShipment;
-// User schema and model
-const UserSchema = new mongoose_1.default.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, required: true }
-});
-const User = mongoose_1.default.models.User || mongoose_1.default.model("User", UserSchema);
-exports.User = User;

@@ -46,7 +46,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserSchema = new mongoose_1.Schema({
     username: {
         type: String,
@@ -66,10 +66,23 @@ const UserSchema = new mongoose_1.Schema({
 }, {
     timestamps: true
 });
+// Pre-save hook to hash password if not already hashed
+UserSchema.pre('save', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!this.isModified('password'))
+            return;
+        // Check if password is already hashed (starts with '$')
+        if (this.password.startsWith('$'))
+            return;
+        // Hash the password
+        const saltRounds = 10;
+        this.password = yield bcrypt_1.default.hash(this.password, saltRounds);
+    });
+});
 // Compare password method
 UserSchema.methods.comparePassword = function (candidatePassword) {
     return __awaiter(this, void 0, void 0, function* () {
-        return bcryptjs_1.default.compare(candidatePassword, this.password);
+        return bcrypt_1.default.compare(candidatePassword, this.password);
     });
 };
-exports.default = mongoose_1.default.model('User', UserSchema);
+exports.default = mongoose_1.default.models.User || mongoose_1.default.model('User', UserSchema);
