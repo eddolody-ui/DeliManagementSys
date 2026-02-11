@@ -12,7 +12,13 @@ const getUserRoleFromToken = async (authorizationHeader?: string) => {
   const token = authorizationHeader.split(" ")[1];
   if (!token || !ENV_VARS.ACCESS_JWT_SECRET) return null;
 
-  const decoded = jwt.verify(token, ENV_VARS.ACCESS_JWT_SECRET) as JwtPayload | string;
+  let decoded: JwtPayload | string;
+  try {
+    decoded = jwt.verify(token, ENV_VARS.ACCESS_JWT_SECRET) as JwtPayload | string;
+  } catch {
+    return null;
+  }
+
   if (!decoded || typeof decoded === "string" || !decoded.userId) return null;
 
   const user = await User.findById(decoded.userId).select("role");
@@ -94,6 +100,9 @@ router.patch("/:trackingId", async (req, res) => {
         updates[field] = req.body[field];
       }
     }
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No valid fields provided for update" });
+    }
 
     const order = await Order.findOne({ TrackingId: req.params.trackingId });
     if (!order) {
@@ -111,8 +120,11 @@ router.patch("/:trackingId", async (req, res) => {
 
     await order.save();
     res.json(order);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Order info update error:", error);
+    if (error?.name === "ValidationError" || error?.name === "CastError") {
+      return res.status(400).json({ message: "Invalid order data", error: error?.message });
+    }
     res.status(500).json({ message: "Failed to update order information", error });
   }
 });
