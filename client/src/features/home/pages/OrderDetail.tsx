@@ -112,10 +112,22 @@ export function OrderDetail() {
     setEditLoading(true);
     setEditError(null);
     try {
+      const trimmedValue = editValue.trim();
+      if (selectedEditField === "Amount" || selectedEditField === "CustomerContact") {
+        if (!trimmedValue || Number.isNaN(Number(trimmedValue))) {
+          setEditError(`${fieldLabelMap[selectedEditField]} must be a valid number`);
+          setEditLoading(false);
+          return;
+        }
+      }
+
       const payload: Partial<
         Pick<OrderData, "CustomerName" | "CustomerContact" | "CustomerAddress" | "Amount" | "Type" | "Note">
       > = {};
-      const value = selectedEditField === "Amount" ? Number(editValue) : editValue.trim();
+      const value =
+        selectedEditField === "Amount" || selectedEditField === "CustomerContact"
+          ? Number(trimmedValue)
+          : trimmedValue;
       (payload as any)[selectedEditField] = value;
 
       const updated = await updateOrderInfo(order.TrackingId, {
@@ -124,8 +136,8 @@ export function OrderDetail() {
       });
       setOrder(updated);
       setShowEditInfoModal(false);
-    } catch (err) {
-      setEditError("Failed to update order information");
+    } catch (err: any) {
+      setEditError(err?.response?.data?.message || "Failed to update order information");
     } finally {
       setEditLoading(false);
     }
@@ -485,7 +497,11 @@ export function OrderDetail() {
                   />
                 ) : (
                   <input
-                    type={selectedEditField === "Amount" ? "number" : "text"}
+                    type={
+                      selectedEditField === "Amount" || selectedEditField === "CustomerContact"
+                        ? "number"
+                        : "text"
+                    }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6"
                     placeholder={`Enter ${selectedEditField}`}
                     value={editValue}
@@ -510,7 +526,7 @@ export function OrderDetail() {
                     variant="outline"
                     onClick={() => setShowEditInfoModal(false)}
                     disabled={editLoading}
-                    className="px-6 py-2 font-semibold rounded-lg border-gray-300"
+                    className="px-6 py-2 font-semibold border-gray-300"
                   >
                     Cancel
                   </Button>

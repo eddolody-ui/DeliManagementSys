@@ -51,20 +51,27 @@ router.patch('/:trackingId/status', async (req, res) => {
     }
 
     const { status, message, createdBy } = req.body;
-    const order = await Order.findOne({ TrackingId: req.params.trackingId });
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+    const updated = await Order.findOneAndUpdate(
+      { TrackingId: req.params.trackingId },
+      {
+        $set: { Status: status },
+        $push: {
+          log: {
+            status,
+            message: message || `Status changed to ${status}`,
+            timestamp: new Date(),
+            createdBy: createdBy || "system",
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Order not found" });
     }
-    order.Status = status;
-    order.log = order.log || [];
-    order.log.push({
-      status,
-      message: message || `Status changed to ${status}`,
-      timestamp: new Date(),
-      createdBy: createdBy || 'system',
-    });
-    await order.save();
-    res.json(order);
+
+    res.json(updated);
   } catch (error) {
     console.error('Order status update error:', error);
     res.status(500).json({ message: 'Failed to update status', error });
@@ -104,22 +111,28 @@ router.patch("/:trackingId", async (req, res) => {
       return res.status(400).json({ message: "No valid fields provided for update" });
     }
 
-    const order = await Order.findOne({ TrackingId: req.params.trackingId });
-    if (!order) {
+    const currentOrder = await Order.findOne({ TrackingId: req.params.trackingId }).select("Status");
+    if (!currentOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    Object.assign(order, updates);
-    order.log = order.log || [];
-    order.log.push({
-      status: order.Status,
-      message: "Order information updated",
-      timestamp: new Date(),
-      createdBy: req.body?.createdBy || "system",
-    });
+    const updated = await Order.findOneAndUpdate(
+      { TrackingId: req.params.trackingId },
+      {
+        $set: updates,
+        $push: {
+          log: {
+            status: currentOrder.Status,
+            message: "Order information updated",
+            timestamp: new Date(),
+            createdBy: req.body?.createdBy || "system",
+          },
+        },
+      },
+      { new: true }
+    );
 
-    await order.save();
-    res.json(order);
+    res.json(updated);
   } catch (error: any) {
     console.error("Order info update error:", error);
     if (error?.name === "ValidationError" || error?.name === "CastError") {
