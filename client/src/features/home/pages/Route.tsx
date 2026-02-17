@@ -101,10 +101,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                                                     ×
                                                   </button>
                                                   <h2 className="text-2xl font-bold mb-6 text-gray-900">Create Route</h2>
-                                                  <div className="mb-3">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Route ID</label>
-                                                    <div className="w-full rounded-md border px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">{"(will be generated)"}</div>
-                                                  </div>
                                                   <div className="mb-6">
                                     <label htmlFor="status-Hub" className="block text-sm font-medium text-gray-700 mb-2">Select Hub</label>
                                     <Select

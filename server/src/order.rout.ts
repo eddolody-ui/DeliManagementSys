@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { saveOrder, Order } from "./config/db";
+import { saveOrder, Order, appendOrderLog } from "./config/db";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import User from "./models/User";
 import { ENV_VARS } from "./config/envVars";
@@ -51,27 +51,27 @@ router.patch('/:trackingId/status', async (req, res) => {
     }
 
     const { status, message, createdBy } = req.body;
-    const updated = await Order.findOneAndUpdate(
-      { TrackingId: req.params.trackingId },
-      {
-        $set: { Status: status },
-        $push: {
-          log: {
-            status,
-            message: message || `Status changed to ${status}`,
-            timestamp: new Date(),
-            createdBy: createdBy || "system",
-          },
-        },
-      },
-      { new: true }
-    );
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
 
-    if (!updated) {
+    const order = await Order.findOne({ TrackingId: req.params.trackingId });
+    if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.json(updated);
+    const previousStatus = order.Status;
+    order.Status = status;
+
+    appendOrderLog(order, {
+      status,
+      createdBy: createdBy || "system",
+      message: message || `Status changed from ${previousStatus} to ${status}`,
+      metadata: { previousStatus, nextStatus: status },
+    });
+
+    await order.save();
+    res.json(order);
   } catch (error) {
     console.error('Order status update error:', error);
     res.status(500).json({ message: 'Failed to update status', error });
@@ -111,28 +111,39 @@ router.patch("/:trackingId", async (req, res) => {
       return res.status(400).json({ message: "No valid fields provided for update" });
     }
 
-    const currentOrder = await Order.findOne({ TrackingId: req.params.trackingId }).select("Status");
+    const currentOrder = await Order.findOne({ TrackingId: req.params.trackingId });
     if (!currentOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    const updated = await Order.findOneAndUpdate(
-      { TrackingId: req.params.trackingId },
-      {
-        $set: updates,
-        $push: {
-          log: {
-            status: currentOrder.Status,
-            message: "Order information updated",
-            timestamp: new Date(),
-            createdBy: req.body?.createdBy || "system",
-          },
-        },
+    const changedFields = Object.entries(updates).reduce(
+      (acc: Array<{ field: string; previous: unknown; next: unknown }>, [field, next]) => {
+        const previous = (currentOrder as any)[field];
+        if (previous !== next) {
+          acc.push({ field, previous, next });
+        }
+        return acc;
       },
-      { new: true }
+      []
     );
 
-    res.json(updated);
+    if (changedFields.length === 0) {
+      return res.status(400).json({ message: "No changes detected" });
+    }
+
+    for (const [field, value] of Object.entries(updates)) {
+      (currentOrder as any)[field] = value;
+    }
+
+    appendOrderLog(currentOrder, {
+      status: currentOrder.Status,
+      createdBy: req.body?.createdBy || "system",
+      message: `Order information updated: ${changedFields.map((f) => f.field).join(", ")}`,
+      metadata: { changedFields },
+    });
+
+    await currentOrder.save();
+    res.json(currentOrder);
   } catch (error: any) {
     console.error("Order info update error:", error);
     if (error?.name === "ValidationError" || error?.name === "CastError") {

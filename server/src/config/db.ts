@@ -30,7 +30,7 @@ const OrderSchema = new mongoose.Schema(
     Note: { type: String },
     shipperId: { type: mongoose.Schema.Types.Mixed, ref: 'Shipper', required: false },
     Status: { type: String,
-              enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "Add To Shipment", "In Route", "Delivered", "Return To Sender", "Cancelled"],
+              enum: ["Pending", "Hub Inbound", "Arrive At Softing Hub", "Add To Shipment", "In Route", "Delivered", "Return To Sender", "Cancelled", "Payment Occupied"],
               default: "Pending" },
     log: [
       {
@@ -38,7 +38,8 @@ const OrderSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
         createdAt: { type: Date, default: Date.now },
         createdBy: { type: String },
-        message: { type: String }
+        message: { type: String },
+        metadata: { type: mongoose.Schema.Types.Mixed }
       }
     ]
   },
@@ -62,6 +63,25 @@ const OrderSchema = new mongoose.Schema(
  */
 
 const Order = mongoose.models.Order || mongoose.model("Order", OrderSchema);
+
+type OrderLogInput = {
+  status?: string;
+  message: string;
+  createdBy?: string;
+  metadata?: Record<string, unknown>;
+};
+
+const appendOrderLog = (order: any, entry: OrderLogInput) => {
+  if (!Array.isArray(order.log)) order.log = [];
+  order.log.push({
+    status: entry.status || order.Status || "Pending",
+    timestamp: new Date(),
+    createdAt: new Date(),
+    createdBy: entry.createdBy || "system",
+    message: entry.message,
+    metadata: entry.metadata || undefined,
+  });
+};
 /* =======================
    Save Order
 ======================= */
@@ -79,22 +99,19 @@ const Order = mongoose.models.Order || mongoose.model("Order", OrderSchema);
  */
 const saveOrder = async (orderData: any) => {
   try {
-    // Add initial log entry for order creation
-    if (!orderData.log) orderData.log = [];
-    orderData.log.push({
+    const order = new Order(orderData);
+    appendOrderLog(order, {
       status: orderData.Status || "Pending",
       message: "Order created",
-      timestamp: new Date(),
-      createdBy: orderData.createdBy || "system"
+      createdBy: orderData.createdBy || "system",
     });
-    const order = new Order(orderData);
     return await order.save();
   } catch (error) {
     console.error("❌ Order save error:", error);
     throw error;
   }
 };
-export { Order, saveOrder };
+export { Order, saveOrder, appendOrderLog };
 
 //section for Shipper schema and model
 const ShipperSchema = new mongoose.Schema({

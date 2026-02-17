@@ -40,7 +40,7 @@ const Login: React.FC = () => {
         loop
         playsInline
       />
-      <div className="absolute inset-0 bg-white/70" />
+      <div className="absolute inset-0 bg-transparent" />
       <Card className="relative z-10 w-full max-w-sm sm:max-w-md">
         <CardHeader>
           <CardTitle>LOGIN</CardTitle>
