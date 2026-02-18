@@ -28,12 +28,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 export function OrderDetail() {
-  const { trackingId } = useParams<{ trackingId: string }>();
-  const { user } = useAuth();
-  const [order, setOrder] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string }) | null>(null);
-  const [shipper, setShipper] = useState<(ShipperData & { _id: string }) | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // လုပ်ဆောင်ချက် ချိတ်ဆက်မှု:
+  // - fetchOrder(useEffect) က trackingId param ပြောင်းသလို getOrder()/getShipper() ခေါ်ပြီး order, shipper state တင်တယ်
+  // - openStatusModal / openEditInfoModal ကို action button onClick နဲ့ချိတ်ပြီး modal state ဖွင့်တယ်
+  // - handleStatusUpdate ကို "Update" button onClick နဲ့ချိတ်ပြီး updateOrderStatus() ခေါ်ကာ status ပြင်တယ်
+  // - handleOrderInfoUpdate ကို confirm dialog action နဲ့ချိတ်ပြီး updateOrderInfo() ခေါ်ကာ order info ပြင်တယ်
+  // - getCurrentFieldValue() ကို edit field select ပြောင်းတဲ့အချိန် current value ပြန်ဖြည့်ဖို့သုံးတယ်
+  const { trackingId } = useParams<{ trackingId: string }>(); // URL param (/Order/:trackingId) မှ trackingId ကိုယူ
+  const { user } = useAuth(); // AuthContext မှ login user data (role permission စစ်ဖို့)
+  const [order, setOrder] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string }) | null>(null); // order detail data state
+  const [shipper, setShipper] = useState<(ShipperData & { _id: string }) | null>(null); // shipper info state
+  const [loading, setLoading] = useState(true); // fetch loading state
+  const [error, setError] = useState<string | null>(null); // fetch error state
 
   // Modal and status update state
   const [showModal, setShowModal] = useState(false);
@@ -61,16 +67,16 @@ export function OrderDetail() {
       : "bg-white";
 
   const openStatusModal = () => {
-    setNewStatus(order?.Status || "");
-    setShowModal(true);
+    setNewStatus(order?.Status || ""); // modal ဖွင့်မတိုင်ခင် လက်ရှိ status ကို prefill
+    setShowModal(true); // status modal ဖွင့်
   };
 
   const openEditInfoModal = () => {
     if (!order) return;
-    setSelectedEditField("CustomerName");
-    setEditValue(order.CustomerName || "");
+    setSelectedEditField("CustomerName"); // default field
+    setEditValue(order.CustomerName || ""); // default value prefill
     setEditError(null);
-    setShowEditInfoModal(true);
+    setShowEditInfoModal(true); // edit modal ဖွင့်
   };
 
   const getCurrentFieldValue = (
@@ -130,12 +136,12 @@ export function OrderDetail() {
           : trimmedValue;
       (payload as any)[selectedEditField] = value;
 
-      const updated = await updateOrderInfo(order.TrackingId, {
+      const updated = await updateOrderInfo(order.TrackingId, { // API: order info update
         ...payload,
         createdBy: "user",
       });
-      setOrder(updated);
-      setShowEditInfoModal(false);
+      setOrder(updated); // updated result ကို UI state ပြန်တင်
+      setShowEditInfoModal(false); // success ဖြစ်ရင် modal ပိတ်
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || "Failed to update order information";
       setEditError(errorMessage);
@@ -150,11 +156,11 @@ export function OrderDetail() {
     setStatusError(null);
     try {
       const message = changeReason.trim() ? changeReason : `Status changed to ${newStatus}`;
-      await updateOrderStatus(order.TrackingId, newStatus, message, "user");
-      const updatedOrder = await getOrder(order.TrackingId);
-      setOrder(updatedOrder);
-      setShowModal(false);
-      setChangeReason("");
+      await updateOrderStatus(order.TrackingId, newStatus, message, "user"); // API: order status update
+      const updatedOrder = await getOrder(order.TrackingId); // latest data refetch
+      setOrder(updatedOrder); // UI state refresh
+      setShowModal(false); // status modal close
+      setChangeReason(""); // reason input clear
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || "Failed to update status";
       setStatusError(errorMessage);
@@ -164,6 +170,7 @@ export function OrderDetail() {
   };
 
   useEffect(() => {
+    // trackingId ပြောင်းတိုင်း order detail API ကိုပြန်ခေါ်
     const fetchOrder = async () => {
       if (!trackingId) {
         setError("No tracking ID provided");
@@ -171,16 +178,16 @@ export function OrderDetail() {
         return;
       }
       try {
-        const orderData = await getOrder(trackingId);
-        setOrder(orderData);
+        const orderData = await getOrder(trackingId); // API: get order detail
+        setOrder(orderData); // order state update
 
         if (orderData.shipperId) {
           if (typeof orderData.shipperId === "object" && orderData.shipperId !== null) {
             setShipper(orderData.shipperId as ShipperData & { _id: string });
           } else if (typeof orderData.shipperId === "string") {
             try {
-              const shipperData = await getShipper(orderData.shipperId);
-              setShipper(shipperData);
+              const shipperData = await getShipper(orderData.shipperId); // API: get shipper detail
+              setShipper(shipperData); // shipper state update
             } catch (shipperError) {
               console.error("Error fetching shipper:", shipperError);
             }
@@ -197,7 +204,7 @@ export function OrderDetail() {
       }
     };
 
-    fetchOrder();
+    fetchOrder(); // effect run
   }, [trackingId]);
 
   if (loading)
@@ -305,7 +312,7 @@ export function OrderDetail() {
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
-                          onClick={openEditInfoModal}
+                          onClick={openEditInfoModal} // click -> edit order info modal open
                           disabled={isReadOnly || isCancelled}
                           className="border-r border-b"
                         >
@@ -313,7 +320,7 @@ export function OrderDetail() {
                         </Button>
                         <Button
                           variant="ghost"
-                          onClick={openStatusModal}
+                          onClick={openStatusModal} // click -> status update modal open
                           disabled={isReadOnly || isCancelled}
                           className="border-r border-b"
                         >
@@ -398,7 +405,7 @@ export function OrderDetail() {
                   </label>
                   <Select
                     value={newStatus}
-                    onValueChange={(value) => setNewStatus(value)}
+                    onValueChange={(value) => setNewStatus(value)} // select change -> newStatus state update
                     disabled={statusLoading || isReadOnly || isCancelled || !canEditOrder}
                   >
                     <SelectTrigger className="w-full min-h-[44px] text-gray-800 font-semibold shadow-sm">
@@ -422,7 +429,7 @@ export function OrderDetail() {
                   rows={3}
                   placeholder="Changed Reason"
                   value={changeReason}
-                  onChange={(e) => setChangeReason(e.target.value)}
+                  onChange={(e) => setChangeReason(e.target.value)} // textarea change -> reason state update
                   disabled={statusLoading || isReadOnly}
                 />
                 <div className="flex gap-3 justify-end">
@@ -431,7 +438,7 @@ export function OrderDetail() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setShowModal(false)}
+                    onClick={() => setShowModal(false)} // cancel -> status modal close
                     disabled={statusLoading}
                     className="px-6 py-2 font-semibold rounded-lg border-gray-300"
                   >
@@ -448,7 +455,7 @@ export function OrderDetail() {
               <div className="bg-white rounded-xl shadow-xl w-full max-w-xl p-8 relative animate-fade-in">
                 <button
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
-                  onClick={() => setShowEditInfoModal(false)}
+                  onClick={() => setShowEditInfoModal(false)} // close button -> edit modal close
                   aria-label="Close"
                   disabled={editLoading || isReadOnly || isCancelled || !canEditOrder}
                 >
@@ -469,8 +476,8 @@ export function OrderDetail() {
                         | "Amount"
                         | "Type"
                         | "Note";
-                      setSelectedEditField(field);
-                      setEditValue(getCurrentFieldValue(field));
+                      setSelectedEditField(field); // selected field state update
+                      setEditValue(getCurrentFieldValue(field)); // current value ကို prefill
                     }}
                     disabled={editLoading || !canEditOrder}
                   >
@@ -494,7 +501,7 @@ export function OrderDetail() {
                     rows={4}
                     placeholder="Enter note"
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => setEditValue(e.target.value)} // text/number input -> editValue update
                     disabled={editLoading}
                   />
                 ) : (
@@ -507,14 +514,14 @@ export function OrderDetail() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6"
                     placeholder={`Enter ${selectedEditField}`}
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => setEditValue(e.target.value)} // note input -> editValue update
                     disabled={editLoading}
                   />
                 )}
                 {editError && <div className="text-red-600 mb-4 text-sm">{editError}</div>}
                 <div className="flex gap-3 justify-end">
                   <Button
-                    onClick={() => setShowOrderConfirmDialog(true)}
+                    onClick={() => setShowOrderConfirmDialog(true)} // save click -> confirm dialog open
                     disabled={
                       editLoading ||
                       !editValue.trim() ||
@@ -526,7 +533,7 @@ export function OrderDetail() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setShowEditInfoModal(false)}
+                    onClick={() => setShowEditInfoModal(false)} // cancel click -> edit modal close
                     disabled={editLoading}
                     className="px-6 py-2 font-semibold border-gray-300"
                   >
@@ -559,8 +566,8 @@ export function OrderDetail() {
                       <AlertDialogAction
                         onClick={(e) => {
                           e.preventDefault();
-                          setShowOrderConfirmDialog(false);
-                          handleOrderInfoUpdate();
+                          setShowOrderConfirmDialog(false); // confirm dialog close
+                          handleOrderInfoUpdate(); // confirm ပြီး update API run
                         }}
                         disabled={editLoading}
                       >

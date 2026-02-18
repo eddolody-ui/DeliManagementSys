@@ -8,25 +8,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Alert, AlertDescription } from './ui/alert';
 
 const Login: React.FC = () => {
+  // username/password input value ကို controlled component အဖြစ် state နဲ့ချိတ်ထားတယ်
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // login fail ဖြစ်ချိန် UI alert ပြဖို့ error state
   const [error, setError] = useState('');
+  // submit လုပ်နေချိန် button/input disable ဖို့ loading state
   const [isLoading, setIsLoading] = useState(false);
+
+  // AuthContext ထဲက login function ကိုယူပြီး auth API flow နဲ့ချိတ်တယ်
   const { login } = useAuth();
+  // login success ပြီး route ပြောင်းဖို့ react-router navigate hook
   const navigate = useNavigate();
 
+  // form submit event နဲ့ချိတ်ထားတဲ့ handler
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    e.preventDefault(); // browser default form submit reload ကိုတား
+    setError(''); // submit မတိုင်ခင် error အဟောင်းကိုရှင်း
+    setIsLoading(true); // submit စတင်ချိန် loading on
 
     try {
-      await login(username, password);
-      navigate('/');
+      await login(username, password); // AuthContext.login -> backend login API
+      navigate('/'); // success ဖြစ်ရင် home route သို့ပြောင်း
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Login failed'); // error message ကို state ထဲထည့်
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // success/fail မရွေး loading off
     }
   };
 
@@ -50,13 +57,14 @@ const Login: React.FC = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* onSubmit -> handleSubmit ချိတ်ထားတဲ့ login form */}
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)} // input change -> username state update
                 required
                 disabled={isLoading}
               />
@@ -67,13 +75,14 @@ const Login: React.FC = () => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)} // input change -> password state update
                 required
                 disabled={isLoading}
               />
             </div>
             {error && (
               <Alert variant="destructive">
+                {/* error state ရှိမှသာ alert render */}
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}

@@ -6,28 +6,28 @@ import { CreateOrderForm } from "./features/home/pages/CreateOrder";
 import { Shipper } from "./features/home/pages/Shipper";
 import { CreateShipper } from "./features/home/pages/CreateShipper";
 import { ShipperDetail } from "./features/home/pages/ShipperDetail";
-import { RouteDetail} from "./features/home/pages/RouteDetail";
+import { RouteDetail } from "./features/home/pages/RouteDetail";
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { Toaster } from "sonner";
 import { RoutePage } from "./features/home/pages/Route";
 import { ShipmentPage } from "./features/home/pages/Shipment";
-import {ShipmentDetail} from "./features/home/pages/ShipmentDetail";
+import { ShipmentDetail } from "./features/home/pages/ShipmentDetail";
 import { Finance } from "./features/home/pages/Finical";
-import {Profile} from "./features/home/pages/Profile.tsx";
+import { Profile } from "./features/home/pages/Profile.tsx";
 
-class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error?: Error}> {
-  constructor(props: {children: ReactNode}) {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error?: Error }> {
+  constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false }; // default state: error မဖြစ်သေး
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+    return { hasError: true, error }; // render error တက်လျှင် fallback UI mode သို့ပြောင်း
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error Boundary caught an error:", error, errorInfo);
+    console.error("Error Boundary caught an error:", error, errorInfo); // debug log အတွက်
   }
 
   render() {
@@ -58,7 +58,7 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
                 </div>
                 <div className="mt-4">
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => window.location.reload()} // reload click -> browser refresh
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
                   >
                     Refresh Page
@@ -71,31 +71,33 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
       );
     }
 
-    return this.props.children;
+    return this.props.children; // error မရှိလျှင် app children ပုံမှန် render
   }
 }
 
 function App() {
   return (
     <ErrorBoundary>
+      {/* app-level runtime error ကို ErrorBoundary နဲ့ဖမ်း */}
       <BrowserRouter>
+        {/* React Router context */}
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/Order" element={<Order />} />
-          <Route path="/Order/CreateOrder" element={<CreateOrderForm />} />
-          <Route path="/Order/:trackingId" element={<OrderDetail />} />
-          <Route path="/Shipper" element={<Shipper />} />
-          <Route path="/Shipper/CreateShipper" element={<CreateShipper />} />
-          <Route path="/Shipper/:shipperId" element={<ShipperDetail />} />
-          <Route path="/Shipper/:shipperId/CreateOrder" element={<CreateOrderForm />}/>
-          <Route path="/Route" element={<RoutePage />} />
-          <Route path="/Route/:RouteId" element={<RouteDetail />} />
-          <Route path="/Shipment" element={<ShipmentPage />} />
-          <Route path="/Shipment/:ShipmentId" element={<ShipmentDetail />} />
-          <Route path="/Finance/Shipper" element={<Finance />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<HomePage />} /> {/* root -> dashboard/home page */}
+          <Route path="/Order" element={<Order />} /> {/* order list page */}
+          <Route path="/Order/CreateOrder" element={<CreateOrderForm />} /> {/* manual create order page */}
+          <Route path="/Order/:trackingId" element={<OrderDetail />} /> {/* selected order detail by trackingId */}
+          <Route path="/Shipper" element={<Shipper />} /> {/* shipper list page */}
+          <Route path="/Shipper/CreateShipper" element={<CreateShipper />} /> {/* create shipper form */}
+          <Route path="/Shipper/:shipperId" element={<ShipperDetail />} /> {/* selected shipper detail by shipperId */}
+          <Route path="/Shipper/:shipperId/CreateOrder" element={<CreateOrderForm />} /> {/* shipper detail ကနေ order create */}
+          <Route path="/Route" element={<RoutePage />} /> {/* route list page */}
+          <Route path="/Route/:RouteId" element={<RouteDetail />} /> {/* selected route detail by RouteId */}
+          <Route path="/Shipment" element={<ShipmentPage />} /> {/* shipment list page */}
+          <Route path="/Shipment/:ShipmentId" element={<ShipmentDetail />} /> {/* selected shipment detail by ShipmentId */}
+          <Route path="/Finance/Shipper" element={<Finance />} /> {/* finance role အတွက် shipper page */}
+          <Route path="/profile" element={<Profile />} /> {/* current user profile page */}
         </Routes>
-        <Toaster richColors /> 
+        <Toaster richColors /> {/* app-wide toast notification outlet */}
       </BrowserRouter>
     </ErrorBoundary>
   );

@@ -21,16 +21,22 @@ import { Label } from "@/components/ui/label"
  * - Show success/error toast using Sonner
  */
 export function CreateOrderForm() {
-  const navigate = useNavigate();
-  const { shipperId } = useParams();
+  // လုပ်ဆောင်ချက် ချိတ်ဆက်မှု:
+  // - fetchShippers useEffect ကို mount အချိန်မှာ chạy ခိုင်းပြီး getShippers() နဲ့ shipper data ယူတယ်
+  // - shipperId sync useEffect က useParams().shipperId ကို formData.shipperId ထဲသို့ချိတ်တယ်
+  // - handleChange / onValueChange ကို input/select change event နဲ့ချိတ်ပြီး formData, DeliFee ကို update လုပ်တယ်
+  // - totalAmount() ကို Total Amount field display နဲ့ submit payload တွက်ချက်ရာမှာသုံးတယ်
+  // - handleSubmit ကို <form onSubmit> နဲ့ချိတ်ထားပြီး createOrder(...) ခေါ်ကာ navigate("/Shipper") လုပ်တယ်
+  const navigate = useNavigate(); // create success ဖြစ်ချိန် route ပြောင်းရန်
+  const { shipperId } = useParams(); // URL param ထဲက shipperId
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // submit loading state
+  const [error, setError] = useState<string | null>(null); // error message state
 
-  const [, setShippers] = useState<(ShipperData & { _id: string })[]>([]);
-  const [file, setFile] = useState<File | null>(null)
+  const [, setShippers] = useState<(ShipperData & { _id: string })[]>([]); // shipper list (warm state)
+  const [file, setFile] = useState<File | null>(null) // attachment file state
 
-  // Town fees mapping
+  // TownShip ရွေးချယ်မှုအလိုက် DeliFee mapping
   const townFees: { [key: string]: number } = {
     Yangon: 2500,
     Mandalay: 4000,
@@ -39,7 +45,7 @@ export function CreateOrderForm() {
     Sagaing: 5000,
   };
 
-  // Form data state
+  // order form input values ကိုစုထားတဲ့ state
   const [formData, setFormData] = useState({
     TrackingId: "",
     CustomerName: "",
@@ -54,7 +60,7 @@ export function CreateOrderForm() {
     shipperId: shipperId || ""
   });
 
-  // Calculate total amount
+  // type အလိုက် total amount တွက်ချက်တဲ့ helper
   const totalAmount = () => {
     const productAmount = formData.ProductAmount || 0;
     const deliFee = formData.DeliFee || 0;
@@ -67,12 +73,12 @@ export function CreateOrderForm() {
     return productAmount + deliFee;
   };
 
-  // Fetch shippers
+  // mount အချိန် shipper list API ခေါ်
   useEffect(() => {
     const fetchShippers = async () => {
       try {
-        const shippersData = await getShippers();
-        setShippers(shippersData);
+        const shippersData = await getShippers(); // API: shipper list
+        setShippers(shippersData); // local state update
       } catch (err) {
         console.error("Error fetching shippers:", err);
       }
@@ -80,43 +86,43 @@ export function CreateOrderForm() {
     fetchShippers();
   }, []);
 
-  // Update shipperId if from URL
+  // URL က shipperId ပါလာရင် formData.shipperId ကို sync လုပ်
   useEffect(() => {
     if (!shipperId) return;
-    setFormData(prev => ({ ...prev, shipperId }));
+    setFormData(prev => ({ ...prev, shipperId })); // param value -> form state
   }, [shipperId]);
 
-  // Handle input changes
+  // input/select change event ကို formData နဲ့ချိတ်
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "ProductAmount" ? Number(value) : value,
+      [name]: name === "ProductAmount" ? Number(value) : value, // ProductAmount ကို number ပြောင်းသိမ်း
     }));
   };
 
-  // Submit form
+  // form submit handler
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault(); // default form reload ကိုတား
+    setLoading(true); // submit start
+    setError(null); // old error clear
 
     if (!formData.shipperId) {
-      setError("Shipper is required. Cannot create order.");
-      setLoading(false);
+      setError("Shipper is required. Cannot create order."); // validation error
+      setLoading(false); // submit stop
       return;
     }
 
     try {
-      await createOrder({ ...formData, Amount: totalAmount(), Status: formData.Status || "Pending" });
+      await createOrder({ ...formData, Amount: totalAmount(), Status: formData.Status || "Pending" }); // API: create order
 
       // Show success toast
 
-      navigate("/Shipper"); // Redirect after creation
+      navigate("/Shipper"); // success -> shipper detail/list flow သို့ပြန်
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error creating order");
     } finally {
-      setLoading(false);
+      setLoading(false); // submit end
     }
   };
 
@@ -127,6 +133,7 @@ export function CreateOrderForm() {
         <TopNavbar />
         <div className="p-8">
           <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* form submit -> handleSubmit */}
             <h2 className="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">
               Create Order
             </h2>
@@ -145,7 +152,7 @@ export function CreateOrderForm() {
                 <Input
                   name="TrackingId"
                   value={formData.TrackingId}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Enter Tracking ID"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
@@ -160,7 +167,7 @@ export function CreateOrderForm() {
                 <Input
                   name="CustomerName"
                   value={formData.CustomerName}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Enter Customer Name"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
@@ -175,7 +182,7 @@ export function CreateOrderForm() {
                 <Input
                   name="CustomerContact"
                   value={formData.CustomerContact}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Enter Customer Contact"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
@@ -190,7 +197,7 @@ export function CreateOrderForm() {
                 <Input
                   name="CustomerAddress"
                   value={formData.CustomerAddress}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Enter full address"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
@@ -205,7 +212,7 @@ export function CreateOrderForm() {
                   value={formData.TownShip}
                   onValueChange={(value) => {
                     const fee = townFees[value] || 0;
-                    setFormData(prev => ({ ...prev, TownShip: value, DeliFee: fee }));
+                    setFormData(prev => ({ ...prev, TownShip: value, DeliFee: fee })); // town select -> township + delifee update
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -230,7 +237,7 @@ export function CreateOrderForm() {
                   type="number"
                   min={0}
                   value={formData.ProductAmount}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Enter Product Amount"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
@@ -256,7 +263,7 @@ export function CreateOrderForm() {
                   <Select
                     value={formData.Type}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, Type: value })
+                      setFormData({ ...formData, Type: value }) // type select -> formData.Type update
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -279,7 +286,7 @@ export function CreateOrderForm() {
                 <Input
                   name="Note"
                   value={formData.Note}
-                  onChange={handleChange}
+                  onChange={handleChange} // input change -> formData update
                   placeholder="Any delivery notes"
                   className="rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
@@ -298,7 +305,7 @@ export function CreateOrderForm() {
                     <Input
                       type="file"
                       className="pl-10 w-full cursor-pointer"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                      onChange={(e) => setFile(e.target.files?.[0] || null)} // file input change -> file state update
                       accept=".jpg,.jpeg,.png,.pdf"
                     />
                   </div>

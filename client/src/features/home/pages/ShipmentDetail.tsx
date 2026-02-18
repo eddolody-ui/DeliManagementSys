@@ -11,35 +11,40 @@ import { getOrder } from "@/api/serviceApi"
 import { useNavigate } from "react-router-dom";
 
 export function ShipmentDetail() {
-  const navigate = useNavigate();
-  const {ShipmentId } = useParams<{ ShipmentId: string }>()
-  const [shipment, setshipment] = useState<(ShipmentData & { _id: string }) | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // လုပ်ဆောင်ချက် ချိတ်ဆက်မှု:
+  // - fetchShipment(useEffect) က ShipmentId param ပြောင်းသလို getShipment(ShipmentId) ကိုခေါ်ပြီး detail state တင်တယ်
+  // - "Add" button onClick က addOrderToShipment(ShipmentId, inputTrackingId) နဲ့ချိတ်ပြီး order ကို shipment ထဲထည့်တယ်
+  // - tracking input onChange က setInputTrackingId နဲ့ချိတ်ထားပြီး user input state ကို update လုပ်တယ်
+  // - order item onClick က navigate(`/order/${order.TrackingId}`) နဲ့ order detail page သို့သွားတယ်
+  const navigate = useNavigate(); // order row click လုပ်ချိန် order detail route သို့သွားရန်
+  const {ShipmentId } = useParams<{ ShipmentId: string }>() // URL param ထဲက ShipmentId ကိုယူ
+  const [shipment, setshipment] = useState<(ShipmentData & { _id: string }) | null>(null) // shipment detail data state
+  const [loading, setLoading] = useState(true) // fetch lifecycle loading state
+  const [error, setError] = useState<string | null>(null) // fetch error message state
 
-  // User input for trackingId
+  // tracking input box မှာရိုက်တဲ့ Tracking ID ကိုသိမ်းထားတဲ့ state
 const [inputTrackingId, setInputTrackingId] = useState("");
 
-// Orders fetched based on input
+// add လုပ်ပြီးပြန်ယူလာတဲ့ order data ကို local list အဖြစ်သိမ်းရန် state
 const [, setFetchedOrders] = useState<
   (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
 >([])
 
   useEffect(() => {
+    // ShipmentId ပြောင်းတိုင်း shipment detail API ကိုပြန်ခေါ်
     const fetchShipment = async () => {
       if (!ShipmentId) {
+        // param မရှိရင် API မခေါ်ဘဲ error state တင်
         setError("No Shipment ID provided")
         setLoading(false)
         return
       }
 
       try {
-        // Fetch route by RouteId (RouteId may be custom string or Mongo _id)
+        // ShipmentId နဲ့ shipment detail ကို backend မှာယူ
         const shipmentData = await getShipment(ShipmentId)
         console.log("Fetched route data:", shipmentData)
-        setshipment(shipmentData);
-
-        // Handle shipper data - either populated object or string reference
+        setshipment(shipmentData); // result ကို UI render state ထဲသို့သိမ်း
       } catch (err: any) {
         console.error("Error fetching Shipment:", err)
         if (err.response?.status === 404) {
@@ -56,7 +61,7 @@ const [, setFetchedOrders] = useState<
       }
     }
 
-    fetchShipment()
+    fetchShipment() // effect mount/param change မှာ fetch စတင်
   }, [ShipmentId])
 
   if (loading) {
@@ -169,13 +174,14 @@ const [, setFetchedOrders] = useState<
                         type="text"
                         placeholder="Enter Tracking ID"
                         value={inputTrackingId}
-                        onChange={(e) => setInputTrackingId(e.target.value)}
+                        onChange={(e) => setInputTrackingId(e.target.value)} // input change -> tracking state update
                         className="border rounded px-4 py-2 flex-1"
                       />
                     <Button className="h-10 rounded border-b ml-auto 
                     transform motion-safe:hover:scale-110 transition-transform bg-gray-400
                      hover:bg-gray-700"
                       onClick={async () => {
+                        // Add button -> tracking id ကို shipment ထဲချိတ်သွားမည့် flow
                         if (!inputTrackingId) return;
                         if (!ShipmentId) {
                           alert("Tracking ID missing");
@@ -183,12 +189,12 @@ const [, setFetchedOrders] = useState<
                         }
 
                         try {
-                          await addOrderToShipment(ShipmentId, inputTrackingId);
+                          await addOrderToShipment(ShipmentId, inputTrackingId); // API: shipment + order mapping
 
-                          const order = await getOrder(inputTrackingId);
-                          setFetchedOrders((prev) => [order, ...prev]);
+                          const order = await getOrder(inputTrackingId); // add ပြီး order detail ပြန်ယူ
+                          setFetchedOrders((prev) => [order, ...prev]); // local list ထဲ prepend လုပ်
 
-                          setInputTrackingId("");
+                          setInputTrackingId(""); // submit ပြီး input clear
                         } catch (err) {
                           console.error(err);
                           alert("Failed to add order");
@@ -229,7 +235,7 @@ const [, setFetchedOrders] = useState<
                         <ul className="space-y-4">
                           {shipment.orders && shipment.orders.length > 0 ? (
                             shipment.orders.map((order: any) => (
-                              <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)}
+                              <li key={order._id} onClick={() => navigate(`/order/${order.TrackingId}`)} // row click -> order detail page
                               className="p-2 border-l flex justify-between items-center">
                                 <div>
                                   <div className="font-semibold text-gray-800">{order.CustomerName}</div>

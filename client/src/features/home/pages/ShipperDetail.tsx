@@ -20,15 +20,20 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export function ShipperDetail() {
-  const { shipperId } = useParams<{ shipperId: string }>()
-  const [shipper, setShipper] = useState<(ShipperData & { _id: string }) | null>(null)
-  const [orders, setOrders] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string })[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editLoading, setEditLoading] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
-  const [showShipperConfirmDialog, setShowShipperConfirmDialog] = useState(false)
+  // လုပ်ဆောင်ချက် ချိတ်ဆက်မှု:
+  // - fetchShipperData(useEffect) က shipperId param ပြောင်းသလို getShipper()/getOrders() ခေါ်ပြီး shipper + orders state တင်တယ်
+  // - openEditModal ကို "Edit Shipper Info" button onClick နဲ့ချိတ်ပြီး edit modal ဖွင့်တယ်
+  // - getCurrentFieldValue() ကို edit field ပြောင်းတဲ့အချိန် လက်ရှိတန်ဖိုး prefill ဖို့သုံးတယ်
+  // - handleSaveShipperInfo ကို confirm dialog action နဲ့ချိတ်ပြီး updateShipper() ခေါ်ကာ shipper info ပြင်တယ်
+  const { shipperId } = useParams<{ shipperId: string }>() // URL param (/Shipper/:shipperId) မှ shipperId ကိုယူ
+  const [shipper, setShipper] = useState<(ShipperData & { _id: string }) | null>(null) // shipper detail data state
+  const [orders, setOrders] = useState<(OrderData & { _id: string; createdAt: string; updatedAt: string })[]>([]) // ဒီ shipper နဲ့ဆိုင်တဲ့ orders
+  const [loading, setLoading] = useState(true) // fetch loading state
+  const [error, setError] = useState<string | null>(null) // fetch error message state
+  const [showEditModal, setShowEditModal] = useState(false) // edit modal open/close state
+  const [editLoading, setEditLoading] = useState(false) // update API loading state
+  const [editError, setEditError] = useState<string | null>(null) // update error message
+  const [showShipperConfirmDialog, setShowShipperConfirmDialog] = useState(false) // confirm dialog open/close
   const [selectedEditField, setSelectedEditField] = useState<
     "ShipperName" | "ShipperContact" | "ShipperAddress" | "PickUpAddress" | "BillingType" | "Note"
   >("ShipperName")
@@ -36,10 +41,10 @@ export function ShipperDetail() {
 
   const openEditModal = () => {
     if (!shipper) return
-    setSelectedEditField("ShipperName")
-    setEditValue(shipper.ShipperName || "")
+    setSelectedEditField("ShipperName") // default edited field
+    setEditValue(shipper.ShipperName || "") // default value prefill
     setEditError(null)
-    setShowEditModal(true)
+    setShowEditModal(true) // edit modal ဖွင့်
   }
 
   const getCurrentFieldValue = (
@@ -86,11 +91,11 @@ export function ShipperDetail() {
       > = {}
       ;(payload as any)[selectedEditField] = editValue.trim()
 
-      const updated = await updateShipper(shipperId, {
+      const updated = await updateShipper(shipperId, { // API: shipper info update
         ...payload,
       })
-      setShipper(updated)
-      setShowEditModal(false)
+      setShipper(updated) // updated result ကို UI state ပြန်တင်
+      setShowEditModal(false) // success ဖြစ်ရင် modal ပိတ်
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || "Failed to update shipper information"
       setEditError(errorMessage)
@@ -100,6 +105,7 @@ export function ShipperDetail() {
   }
 
   useEffect(() => {
+    // shipperId ပြောင်းတိုင်း shipper detail + related orders ကိုပြန်ယူ
     const fetchShipperData = async () => {
       if (!shipperId) {
         setError("No shipper ID provided")
@@ -109,11 +115,11 @@ export function ShipperDetail() {
 
       try {
         // Fetch shipper details
-        const shipperData = await getShipper(shipperId)
-        setShipper(shipperData)
+        const shipperData = await getShipper(shipperId) // API: shipper detail
+        setShipper(shipperData) // shipper state update
 
         // Fetch all orders and filter by shipper
-        const allOrders = await getOrders() as (OrderData & { _id: string; createdAt: string; updatedAt: string })[]
+        const allOrders = await getOrders() as (OrderData & { _id: string; createdAt: string; updatedAt: string })[] // API: all orders
         const shipperOrders = allOrders.filter(order => {
           if (typeof order.shipperId === 'string') {
             return order.shipperId === shipperId
@@ -123,7 +129,7 @@ export function ShipperDetail() {
           }
           return false
         })
-        setOrders(shipperOrders)
+        setOrders(shipperOrders) // filtered orders ကို UI state ထဲသိမ်း
       } catch (err: unknown) {
         console.error("Error fetching shipper data:", err)
         const error = err as { response?: { status?: number; data?: any }; code?: string; message?: string }
@@ -142,7 +148,7 @@ export function ShipperDetail() {
       }
     }
 
-    fetchShipperData()
+    fetchShipperData() // effect run
   }, [shipperId])
 
   if (loading) {
@@ -224,7 +230,7 @@ export function ShipperDetail() {
                 <Button
                   variant="ghost"
                   className="rounded border-b transform motion-safe:hover:scale-110 transition-transform"
-                  onClick={openEditModal}
+                  onClick={openEditModal} // click -> edit shipper modal open
                 >
                   Edit Shipper Info
                 </Button>
@@ -276,8 +282,8 @@ export function ShipperDetail() {
                         | "PickUpAddress"
                         | "BillingType"
                         | "Note"
-                      setSelectedEditField(field)
-                      setEditValue(getCurrentFieldValue(field))
+                      setSelectedEditField(field) // selected field state update
+                      setEditValue(getCurrentFieldValue(field)) // selected field value prefill
                     }}
                     disabled={editLoading}
                   >
@@ -300,7 +306,7 @@ export function ShipperDetail() {
                     rows={4}
                     placeholder="Enter note"
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => setEditValue(e.target.value)} // textarea change -> editValue update
                     disabled={editLoading}
                   />
                 ) : (
@@ -308,14 +314,14 @@ export function ShipperDetail() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6"
                     placeholder={`Enter ${selectedEditField}`}
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => setEditValue(e.target.value)} // input change -> editValue update
                     disabled={editLoading}
                   />
                 )}
                 {editError && <div className="text-red-600 mb-4 text-sm">{editError}</div>}
                 <div className="flex gap-3 justify-end">
                   <Button
-                    onClick={() => setShowShipperConfirmDialog(true)}
+                    onClick={() => setShowShipperConfirmDialog(true)} // save click -> confirm dialog open
                     disabled={
                       editLoading ||
                       !editValue.trim() ||
@@ -326,7 +332,7 @@ export function ShipperDetail() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setShowEditModal(false)}
+                    onClick={() => setShowEditModal(false)} // cancel click -> edit modal close
                     disabled={editLoading}
                     className="px-6 py-2 font-semibold rounded-lg border-gray-300"
                   >
@@ -359,8 +365,8 @@ export function ShipperDetail() {
                       <AlertDialogAction
                         onClick={(e) => {
                           e.preventDefault()
-                          setShowShipperConfirmDialog(false)
-                          handleSaveShipperInfo()
+                          setShowShipperConfirmDialog(false) // confirm dialog close
+                          handleSaveShipperInfo() // confirm ပြီး update API run
                         }}
                         disabled={editLoading}
                       >
