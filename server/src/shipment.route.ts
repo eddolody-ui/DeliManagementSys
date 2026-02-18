@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Shipment, saveShipment, Order } from "./config/db";
+import { Shipment, saveShipment, Order, appendOrderLog } from "./config/db";
 import mongoose from "mongoose";
 const router = Router();
 
@@ -100,12 +100,11 @@ router.put("/:id", async (req, res) => {
 
     // Update order status and log
     order.Status = "Add To Shipment";
-    if (!Array.isArray(order.log)) order.log = [];
-    order.log.push({
+    appendOrderLog(order, {
       status: "Add To Shipment",
       message: `Order added to shipment ${shipment.ShipmentId}`,
-      timestamp: new Date(),
-      createdBy: req.body.createdBy || "system"
+      createdBy: req.body.createdBy || "system",
+      metadata: { shipmentId: shipment.ShipmentId },
     });
     await order.save();
 

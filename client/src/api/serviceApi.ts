@@ -113,7 +113,7 @@ export interface OrderData {
   Type: string;
   Note: string;
   shipperId?: string | ShipperData;
-  Status: string | 'Pending' | 'In Transit' | 'Delivered' | 'Cancelled'| 'RTS';
+  Status: string | 'Pending' | 'In Transit' | 'Delivered' | 'Cancelled'| 'RTS' | 'Payment Occupied';
   log?: {
     status: string;
     timestamp: string;
@@ -209,6 +209,7 @@ export const updateOrderInfo = async (
 //..........................................................................................................//
 
 export interface ShipperData {
+  _id: string;
   ShipperId: string;
   ShipperName: string;
   ShipperContact: string;

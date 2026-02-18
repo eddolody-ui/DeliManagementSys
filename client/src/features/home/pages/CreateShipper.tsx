@@ -11,6 +11,7 @@ export function CreateShipper() {
   const [loading, setLoading] = useState(false); // submit API လုပ်နေချိန် loading state
 
   const [formData, setFormData] = useState({
+    _id: "",
     ShipperId: "",
     ShipperName: "",
     ShipperContact: "",

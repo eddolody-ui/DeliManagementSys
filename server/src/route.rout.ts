@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { DeliRoute, saveDeliRoute } from "./config/db";
+import { DeliRoute, saveDeliRoute, appendOrderLog } from "./config/db";
 import mongoose from "mongoose";
 import { Order } from "./config/db";
 const router = Router();
@@ -63,12 +63,11 @@ router.put("/:routeId", async (req, res) => {
 
     // Update order status and log
     order.Status = "In Route";
-    if (!Array.isArray(order.log)) order.log = [];
-    order.log.push({
+    appendOrderLog(order, {
       status: "In Route",
       message: `Order added to route ${route.RouteId}`,
-      timestamp: new Date(),
-      createdBy: req.body.createdBy || "system"
+      createdBy: req.body.createdBy || "system",
+      metadata: { routeId: route.RouteId },
     });
     await order.save();
 
